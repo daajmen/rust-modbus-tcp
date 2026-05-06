@@ -1,5 +1,5 @@
 use std::io::prelude::*; // traits: Read, Write (ger .read/.write)
-use std::net::TcpStream; // TCP socket-typ
+use std::net::TcpStream;
 
 fn main() -> std::io::Result<()> { // main kan returnera fel (Result)
 
@@ -13,7 +13,7 @@ fn main() -> std::io::Result<()> { // main kan returnera fel (Result)
     
     
     
-    let data= [0x00, 0x00, 0x00, 0x64]; // Startadress 2byte, quantity 2byte  
+    let data= [0x00, 0x00, 0x00, 0x10]; // Startadress 2byte, quantity 2byte  
     let length: u16 = 1 + 1 + data.len() as u16; 
 
     // Request 
@@ -36,16 +36,21 @@ fn main() -> std::io::Result<()> { // main kan returnera fel (Result)
     let mut response = [0u8; 254]; 
 
     // Kolla storlek på svaret
-    let n = stream.read(&mut response)?; 
+    let byte_count: usize = stream.read(&mut response)?; 
 
     // Skriv ut antal bytes 
-    println!("bytes: {}", n);
+    println!("Number of bytes in answer -> {}", byte_count);
     // Printa ut rådata från modbus.  
-    println!("{:02x?}", &response[..n]); 
+    println!("Response -> {:02x?}", &response[..byte_count]);
 
+    let mut reg_index : u16 = u16::from_be_bytes([data[0], data[1]]) + (function_code as u16 * 10000); 
 
+    for i in (9..byte_count).step_by(2){
+        let regs = u16::from_be_bytes([response[i], response[i+1]]);
 
-
+        println!("{} -> {}", reg_index,  regs);  
+        reg_index = reg_index +1;        
+    }
 
 
     Ok(())
