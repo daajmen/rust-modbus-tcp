@@ -1,33 +1,21 @@
-use std::io::prelude::*; // traits: Read, Write (ger .read/.write)
-use std::net::TcpStream;
+use std::io::prelude::*;
+use modbus::modbus_client;
+
+use crate::modbus::modbus_requests; 
+
+mod modbus; 
+
 
 fn main() -> std::io::Result<()> { // main kan returnera fel (Result)
 
-    let mut stream = TcpStream::connect("127.0.0.1:502")?; 
+    let ip_adress = "127.0.0.1:502";
+    let slave_id = 1;  
+    let start_adress = 0;
+    let quantity = 10; 
 
-    let transaction_id : u16 = 0x1501; 
-    let protocol_id : u16 = 0;  
-    let function_code : u8 = 3; 
+    let mut stream = modbus_client::connect_modbus(ip_adress)?; 
 
-    let unit_id : u8 = 1; 
-    
-    
-    
-    let data= [0x00, 0x00, 0x00, 0x10]; // Startadress 2byte, quantity 2byte  
-    let length: u16 = 1 + 1 + data.len() as u16; 
-
-    // Request 
-    let mut request : Vec<u8> = Vec::new(); 
-
-    request.extend_from_slice(&transaction_id.to_be_bytes()); // High / Low
-    request.extend_from_slice(&protocol_id.to_be_bytes()); // 00 = modbus TCP
-    request.extend_from_slice(&length.to_be_bytes()); // unit_id + function_code + data
-
-    request.push(unit_id); // ID 
-    request.push(function_code); // Modbus kod 
-
-    request.extend_from_slice(&data); // Payload
-
+    let request = modbus_requests::build_read_holdingreg(slave_id, start_adress, quantity); 
 
     // Write 
     stream.write(&request)?;
@@ -43,13 +31,11 @@ fn main() -> std::io::Result<()> { // main kan returnera fel (Result)
     // Printa ut rådata från modbus.  
     println!("Response -> {:02x?}", &response[..byte_count]);
 
-    let mut reg_index : u16 = u16::from_be_bytes([data[0], data[1]]) + (function_code as u16 * 10000); 
 
     for i in (9..byte_count).step_by(2){
         let regs = u16::from_be_bytes([response[i], response[i+1]]);
 
-        println!("{} -> {}", reg_index,  regs);  
-        reg_index = reg_index +1;        
+        println!("-> {}",  regs);  
     }
 
 
