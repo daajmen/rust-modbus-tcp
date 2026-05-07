@@ -1,10 +1,16 @@
 
+pub enum ModbusFunction {
+    ReadCoilRegister = 1, 
+    ReadInputStatusRegister = 2, 
+    ReadHoldingRegister = 3, 
+    ReadInputRegister = 4, 
+}
 
-pub fn build_read_holdingreg(unit_id: u8, start_addr: u16, quantity: u16 ) -> Vec<u8> {
+pub fn build_read_register(modbus_function : ModbusFunction, unit_id: u8, start_addr: u16, quantity: u16 ) -> Vec<u8> {
 
     let transaction_id : u16 = 0x1501; 
     let protocol_id : u16 = 0;  
-    let function_code : u8 = 3; 
+    let function_code : u8 = modbus_function as u8; 
     
     // Startadress 2byte, quantity 2byte    
     
