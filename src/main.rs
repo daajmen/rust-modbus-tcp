@@ -16,13 +16,39 @@ fn main() -> std::io::Result<()> {
 
     // Connect to server
     master.connect();
-    let r = master.read_modbus_register(
+    let md_coil = master.read_modbus_register(
         ModbusFunction::ReadCoilRegister,
         slave_id,
         start_adress,
         quantity);
 
-    println!("{:?}", r); 
+    println!("{:?}", md_coil);
+
+    let mb_inputstatus = master.read_modbus_register(
+        ModbusFunction::ReadInputStatusRegister,
+        slave_id,
+        start_adress,
+        quantity);
+
+    println!("{:?}", mb_inputstatus);
+
+    let mb_inputreg = master.read_modbus_register(
+        ModbusFunction::ReadInputRegister,
+        slave_id,
+        start_adress,
+        quantity);
+
+    println!("{:?}", mb_inputreg);
+
+    let mb_holding = master.read_modbus_register(
+        ModbusFunction::ReadHoldingRegister,
+        slave_id,
+        start_adress,
+        quantity);
+
+    println!("{:?}", mb_holding);
+
+
     Ok(())
 
 }

@@ -1,8 +1,11 @@
 use std::io::prelude::*;
 use std::io::Result;
-use std::{net::TcpStream};
-use crate::modbus::modbus_response::{decode_response_bits};
+use std::collections::HashMap;
 
+use std::{net::TcpStream};
+use crate::modbus::modbus_response::{decode_response_bits, decode_response};
+
+#[derive(Clone, Copy)]
 pub enum ModbusFunction {
     ReadCoilRegister = 1, 
     ReadInputStatusRegister = 2, 
@@ -33,8 +36,9 @@ impl ModbusMaster {
         self.stream = s.ok(); 
     }
 
+
     // Read modbus register
-    pub fn read_modbus_register(&mut self, modbus_function: ModbusFunction,unit_id: u8, start_addr: u16, quantity : u16 ) -> Result<Vec<u16>> {
+    pub fn read_modbus_register(&mut self, modbus_function: ModbusFunction,unit_id: u8, start_addr: u16, quantity : u16 ) -> Result<HashMap<u16, u16>> {
 
         fn build_read_register(modbus_function : ModbusFunction, unit_id: u8, start_addr: u16, quantity: u16 ) -> Vec<u8> {
 
@@ -65,6 +69,10 @@ impl ModbusMaster {
             return request; 
         }
 
+        let mb_function = modbus_function.clone(); 
+
+        
+
         // Unpack
         let stream = self.stream.as_mut().unwrap(); 
 
@@ -74,8 +82,19 @@ impl ModbusMaster {
         let mut response = [0u8; 254]; 
         let byte_count: usize = stream.read(&mut response)?; 
 
+        
+        
+        // Try to pair. 
+        let map_start = start_addr + (modbus_function as u16 * 10000);
 
-        Ok(decode_response_bits(byte_count, quantity, &response))
+
+
+        match mb_function {
+            ModbusFunction::ReadCoilRegister => Ok(decode_response_bits(byte_count, quantity, &response, map_start )), 
+            ModbusFunction::ReadInputStatusRegister =>  Ok(decode_response_bits(byte_count, quantity, &response, map_start)),
+            _ => Ok(decode_response(byte_count, &response, map_start))
+        }
+        
 
     }
 
