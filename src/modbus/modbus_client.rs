@@ -2,6 +2,7 @@ use std::io::prelude::*;
 use std::io::Result;
 use std::collections::HashMap;
 
+use std::u8;
 use std::{net::TcpStream};
 use crate::modbus::modbus_response::{decode_response_bits, decode_response};
 
@@ -9,8 +10,8 @@ use crate::modbus::modbus_response::{decode_response_bits, decode_response};
 pub enum ModbusFunction {
     ReadCoilRegister = 1, 
     ReadInputStatusRegister = 2, 
-    ReadHoldingRegister = 3, 
     ReadInputRegister = 4, 
+    ReadHoldingRegister = 3, 
 }
 
 pub struct ModbusMaster {
@@ -82,17 +83,14 @@ impl ModbusMaster {
         let mut response = [0u8; 254]; 
         let byte_count: usize = stream.read(&mut response)?; 
 
-        
-        
-        // Try to pair. 
-        let map_start = start_addr + (modbus_function as u16 * 10000);
-
 
 
         match mb_function {
-            ModbusFunction::ReadCoilRegister => Ok(decode_response_bits(byte_count, quantity, &response, map_start )), 
-            ModbusFunction::ReadInputStatusRegister =>  Ok(decode_response_bits(byte_count, quantity, &response, map_start)),
-            _ => Ok(decode_response(byte_count, &response, map_start))
+            ModbusFunction::ReadCoilRegister => Ok(decode_response_bits(byte_count, quantity, &response, start_addr + 10000 )), 
+            ModbusFunction::ReadInputStatusRegister => Ok(decode_response_bits(byte_count, quantity, &response, start_addr + 20000)),
+            ModbusFunction::ReadInputRegister => Ok(decode_response(byte_count, &response, start_addr + 30000)),
+            ModbusFunction::ReadHoldingRegister => Ok(decode_response(byte_count, &response, start_addr + 40000))
+
         }
         
 
