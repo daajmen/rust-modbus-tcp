@@ -1,6 +1,6 @@
 use std::io::prelude::*;
 use std::io::Result;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use std::u8;
 use std::{net::TcpStream};
@@ -39,7 +39,7 @@ impl ModbusMaster {
 
 
     // Read modbus register
-    pub fn read_modbus_register(&mut self, modbus_function: ModbusFunction,unit_id: u8, start_addr: u16, quantity : u16 ) -> Result<HashMap<u16, u16>> {
+    pub fn read_modbus_register(&mut self, modbus_function: ModbusFunction,unit_id: u8, start_addr: u16, quantity : u16 ) -> Result<BTreeMap<u16, u16>> {
 
         fn build_read_register(modbus_function : ModbusFunction, unit_id: u8, start_addr: u16, quantity: u16 ) -> Vec<u8> {
 

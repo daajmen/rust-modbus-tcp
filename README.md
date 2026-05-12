@@ -7,3 +7,6 @@ Using this as a project to learn rust, with a background as a automation enginee
 - Terminal interface.
 - Be good enough to use in my daily work. 
 - Built in Rust.
+
+
+![alt text](assets/image.png)
