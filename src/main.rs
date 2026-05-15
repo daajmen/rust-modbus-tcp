@@ -7,6 +7,7 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 
 use modbus::modbus_client::ModbusMaster;
 use crate::modbus::modbus_client::ModbusFunction;
+use crate::ui::dashboard::AppCommand;
 use ui::dashboard::App; 
 mod modbus; 
 mod ui; 
@@ -26,15 +27,44 @@ fn main() -> std::io::Result<()> {
     let mut poll_count = 0; 
 
     let mut master = ModbusMaster::new(ip_adress);
-    master.connect();
+    let mut app = App::default(); 
 
-    ratatui::run(|terminal| App::default().run(terminal))
+    
 
 
-//    loop {
-//        execute!(stdout(), Clear(ClearType::All), MoveTo(0, 0)).unwrap();
-//        // Connect to server
-//
+    ratatui::run(|terminal|{
+        // Creates instance.
+        let mut app = App::default();
+
+        // Loop while should_exit is not triggered.
+        while !app.should_exit() {
+            // Draws the UI
+            terminal.draw(|frame| app.draw(frame))?;
+         
+            //
+            if let Some(command) = app.handle_events()? {
+            match command {
+                AppCommand::Connect => {
+                    master.connect();
+                    println!("We are here :) ")
+                }
+            }
+        }
+    }
+
+    Ok(())
+})
+}
+                 
+    //loop {
+        //execute!(stdout(), Clear(ClearType::All), MoveTo(0, 0)).unwrap();
+        // Connect to server
+
+
+
+
+
+
 //        let md_coil = master.read_modbus_register(
 //            ModbusFunction::ReadCoilRegister,
 //            slave_id,
@@ -91,4 +121,4 @@ fn main() -> std::io::Result<()> {
 
 
 
-}
+//}

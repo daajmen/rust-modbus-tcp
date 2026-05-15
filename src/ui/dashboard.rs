@@ -14,7 +14,7 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 pub struct App {
     counter: u8,
     exit: bool,
-    connect: bool,
+    connect_requested: bool,
     ip_address_input: String,
     poll_time_input: String,
     active_field: InputField,
@@ -26,12 +26,16 @@ enum InputField {
     PollTime,
 }
 
+pub enum AppCommand {
+    Connect,
+}
+
 impl Default for App {
     fn default() -> Self {
         Self {
             counter: 0, 
             exit: false, 
-            connect: false, 
+            connect_requested: false, 
             ip_address_input: "127.0.0.1:502".to_string(), 
             poll_time_input: "1500".to_string(), 
             active_field: InputField::IpAddress, 
@@ -51,11 +55,19 @@ impl App {
         Ok(())
     }
 
-    fn draw(&self, frame: &mut Frame) {
+    pub fn should_exit(&self) -> bool {
+    self.exit
+    }
+
+    pub fn connect_requested(&self) -> bool {
+        self.connect_requested
+    }
+
+    pub fn draw(&self, frame: &mut Frame) {
         frame.render_widget(self, frame.area());
     }
 
-    fn handle_events(&mut self) -> io::Result<()> {
+    pub fn handle_events(&mut self) -> io::Result<Option<AppCommand>> {
         match event::read()? {
             // it's important to check that the event is a key press event as
             // crossterm also emits key release and repeat events on Windows.
@@ -64,7 +76,7 @@ impl App {
             }
             _ => {}
         };
-        Ok(())
+        Ok(Some(AppCommand::Connect))
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
@@ -93,10 +105,10 @@ impl App {
             }     
 
             KeyCode::Enter => {
-                if self.connect {
-                    self.connect = false
+                if self.connect_requested {
+                    self.connect_requested = false
                 } else {
-                    self.connect = true
+                    self.connect_requested = true
                 }
             }
                 
@@ -114,7 +126,7 @@ impl Widget for &App {
         let instructions = Line::from(vec![           
             " Quit ".into(),
             "<Q> ".blue().bold(),
-            " Connect".into(), 
+            " Connect ".into(), 
             "<Enter> ".blue().bold()
         ]);
 
@@ -143,14 +155,6 @@ impl Widget for &App {
             Line::from(vec![
             "   Poll time in ms: ".into(),
             poll_style,
-            ]), 
-            Line::from(vec![
-            "   Connection status: ".into(),
-            if self.connect {
-                "Connected".green() 
-            } else {
-                "Disconnected".red()
-            }
             ]),                            
         
         
