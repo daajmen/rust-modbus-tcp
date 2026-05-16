@@ -16,15 +16,19 @@ pub enum ModbusFunction {
 
 pub struct ModbusMaster {
     addr: String, 
+    port : String,
     stream : Option<TcpStream>,
 }
+
+
 
 impl ModbusMaster {
     
     // Build instance
-    pub fn new(addr: &str) -> Self {
+    pub fn new(addr: &str, port: &str) -> Self {
         Self {
             addr: addr.to_string(),
+            port: port.to_string(), 
             stream: None,
         }
     }
@@ -32,7 +36,7 @@ impl ModbusMaster {
     // Connect to Modbus server
     pub fn connect(&mut self) {
 
-        let s = TcpStream::connect(&self.addr); 
+        let s = TcpStream::connect(format!("{}:{}", &self.addr, &self.port)); 
 
         self.stream = s.ok(); 
     }
