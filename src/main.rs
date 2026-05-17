@@ -17,6 +17,7 @@ fn main() -> Result<()> {
         modbus_data: "".to_string(),
         poll_time: 1500,
         counter: 0,
+        connection_error: false, 
     };
 
 

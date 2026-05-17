@@ -6,14 +6,14 @@ use std::u8;
 use std::{net::TcpStream};
 use crate::modbus::modbus_response::{decode_response_bits, decode_response};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Default)]
 pub enum ModbusFunction {
+    #[default]
     ReadCoilRegister = 1, 
     ReadInputStatusRegister = 2, 
     ReadInputRegister = 4, 
     ReadHoldingRegister = 3, 
 }
-
 pub struct ModbusMaster {
     addr: String, 
     port : String,

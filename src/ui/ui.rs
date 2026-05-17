@@ -18,6 +18,9 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
         "<c> ".blue().bold(),
         " Gateway Configuration ".into(),
         "<C> ".blue().bold(), 
+        " Add modbus register ".into(),
+        "<a> ".blue().bold(), 
+        
 
     ]); 
 
@@ -47,7 +50,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
 
 
     frame.render_widget(
-        Paragraph::new(" Configuration")
+        Paragraph::new(" Modbus registers ")
         .block(Block::new().bold().fg(Color::Blue).borders(Borders::ALL)),
         outer_layout[0],
     );
@@ -117,12 +120,6 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
             width: frame.area().width / 2, 
             height: frame.area().height / 3,  
         }; 
-
-        let config_text = format!(
-            " IP: {}\nPort: {}\n\nEsc = Close",
-            app.ip_adress,
-            app.port,
-        );
 
         frame.render_widget(
             Clear,
@@ -196,8 +193,10 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                     &app.port
                 );
             client.connect();
+            
+            master = Some(client);
 
-            master = Some(client); 
+             
             
             }
             // Fetch data 
@@ -261,6 +260,7 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                             event::KeyCode::Char('q') => break Ok(()),
                             event::KeyCode::Char('c') => app.connect_requested = !app.connect_requested,
                             event::KeyCode::Char('C') => app.show_config_popup = true,
+                            event::KeyCode::Char('a') => todo!(),
                             event::KeyCode::Esc => app.show_config_popup = false,
                             _ => {},
                         }

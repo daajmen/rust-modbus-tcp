@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use crate::modbus::modbus_client::ModbusFunction; 
 
 
 #[derive(Debug, Default)]
@@ -12,6 +13,7 @@ pub struct AppState {
     pub modbus_data: String,
     pub poll_time: u16,
     pub counter: u16,
+    pub connection_error: bool, 
 }
 
 #[derive(Debug, Default)]
@@ -21,6 +23,17 @@ pub enum PopupField {
     Port,
     Poll,
 }
+
+#[derive(Debug, Default)]
+pub struct ModbusRequest {
+    slave_id: u8,
+    function: ModbusFunction, 
+    start_addr: u16,
+    quantity: u8, 
+
+
+}
+
 
 pub fn handle_modbus_data(app: &mut AppState, data: Vec<BTreeMap<u16,u16>>) {
 
