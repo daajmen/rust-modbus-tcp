@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use std::u8;
 use std::{net::TcpStream};
+
 use crate::modbus::modbus_response::{decode_response_bits, decode_response};
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -17,9 +18,8 @@ pub enum ModbusFunction {
 pub struct ModbusMaster {
     addr: String, 
     port : String,
-    stream : Option<TcpStream>,
+    pub stream : Option<TcpStream>,
 }
-
 
 
 impl ModbusMaster {
@@ -34,11 +34,14 @@ impl ModbusMaster {
     }
 
     // Connect to Modbus server
-    pub fn connect(&mut self) {
+    pub fn connect(&mut self) -> std::io::Result<()> {
 
         let s = TcpStream::connect(format!("{}:{}", &self.addr, &self.port)); 
 
-        self.stream = s.ok(); 
+        self.stream = Some(s?);
+
+        // Todo clean
+        std::result::Result::Ok(()) 
     }
 
 
@@ -78,8 +81,13 @@ impl ModbusMaster {
 
         
 
-        // Unpack
-        let stream = self.stream.as_mut().unwrap(); 
+        let Some(stream) = self.stream.as_mut() else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotConnected,
+                "Gateway not responding",
+            )); 
+
+        }; 
 
         let modbus_request = build_read_register(modbus_function, unit_id, start_addr, quantity);
         stream.write(&modbus_request)?;

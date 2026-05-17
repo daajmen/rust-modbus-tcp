@@ -62,6 +62,9 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
         connection_status = "CONNECTED";
         connection_color = Color::Green;
 
+    } else if app.connection_error {
+        connection_status = "CONNECTION FAILED!!";
+        connection_color = Color::Red;        
     } else {
         connection_status = "DISCONNECTED";
         connection_color = Color::Red;        
@@ -184,7 +187,8 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
         // Check request
         if app.connect_requested && last_poll.elapsed() >= Duration::from_millis(app.poll_time as u64) {
             last_poll = Instant::now(); 
-
+            // reset connection flag 
+            app.connection_error = false; 
             // if connection has not been made
             if master.is_none() {
                 // Create instance
@@ -192,24 +196,30 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                     &app.ip_adress,
                     &app.port
                 );
-            client.connect();
-            
+                
+            let connection_ok = client.connect(); 
+
             master = Some(client);
 
-             
+            // Connection failed
+            app.connection_error = connection_ok.is_err();
             
             }
             // Fetch data 
             if let Some(master) = master.as_mut() {
                 let data = [
-                    master.read_modbus_register(ModbusFunction::ReadCoilRegister, app.slave_id, start_adress, quantity)?,
-                    master.read_modbus_register(ModbusFunction::ReadInputStatusRegister,app.slave_id, start_adress,quantity)?,
-                    master.read_modbus_register(ModbusFunction::ReadInputRegister, app.slave_id, start_adress, quantity)?,
-                    master.read_modbus_register(ModbusFunction::ReadHoldingRegister,app.slave_id,start_adress,quantity)?,        
+                    master.read_modbus_register(ModbusFunction::ReadCoilRegister, app.slave_id, start_adress, quantity),
+                    master.read_modbus_register(ModbusFunction::ReadInputStatusRegister,app.slave_id, start_adress,quantity),
+                    master.read_modbus_register(ModbusFunction::ReadInputRegister, app.slave_id, start_adress, quantity),
+                    master.read_modbus_register(ModbusFunction::ReadHoldingRegister,app.slave_id,start_adress,quantity),        
                 ];
 
-                handle_modbus_data(app, data.to_vec());
-
+            // Not my solution -.-     
+            if let [Ok(a), Ok(b), Ok(c), Ok(d)] = data {
+                handle_modbus_data(app, vec![a, b, c, d]);
+            } else {
+                handle_modbus_data(app, vec![]);
+            }
             }
     
 
