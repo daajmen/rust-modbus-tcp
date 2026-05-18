@@ -58,7 +58,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
     let connection_status: &str;
     let connection_color: Color;
 
-    if app.connect_requested {
+    if app.connect_requested && !app.connection_error {
         connection_status = "CONNECTED";
         connection_color = Color::Green;
 
@@ -187,8 +187,6 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
         // Check request
         if app.connect_requested && last_poll.elapsed() >= Duration::from_millis(app.poll_time as u64) {
             last_poll = Instant::now(); 
-            // reset connection flag 
-            app.connection_error = false; 
             // if connection has not been made
             if master.is_none() {
                 // Create instance
