@@ -16,6 +16,7 @@ fn main() -> Result<()> {
         active_popup_field: PopupField::Ip,
         modbus_data: "".to_string(),
         poll_time: 1500,
+        poll_time_input: "1500".to_string(), 
         counter: 0,
         connection_error: false, 
     };

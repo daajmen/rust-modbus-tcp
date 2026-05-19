@@ -161,7 +161,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
                 Line::from(vec![    
                     "Polling time: ".into(),
                     Span::styled(
-                        &app.poll_time.to_string(),
+                        &app.poll_time_input.to_string(),
                         Style::default().fg(highlight_poll))]),                        
                 
                 ])
@@ -247,7 +247,14 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                 match app.active_popup_field {
                                     PopupField::Ip => { app.ip_adress.pop(); }
                                     PopupField::Port => { app.port.pop(); }
-                                    PopupField::Poll => { app.poll_time; }
+                                    PopupField::Poll => { 
+                                        app.poll_time_input.pop();
+                                        
+                                        if let Ok(value) = app.poll_time_input.parse::<u16>() {
+                                            app.poll_time = value;
+                                        }
+                                    
+                                     }
                                 }
                             }
 
@@ -255,12 +262,18 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                 match app.active_popup_field {
                                     PopupField::Ip => app.ip_adress.push(c),
                                     PopupField::Port => app.port.push(c),
-                                    PopupField::Poll => todo!(),
+                                    PopupField::Poll => app.poll_time_input.push(c),
                                 }
                             }
 
-                            event::KeyCode::Esc => app.show_config_popup = false,
-                            event::KeyCode::Enter => app.show_config_popup = false,
+                            event::KeyCode::Esc => {
+                                app.show_config_popup = false;
+
+                                if let Ok(value) = app.poll_time_input.parse::<u16>() {
+                                    app.poll_time = value;
+                                }
+                            
+                            },
                             _ => {}
                         }                        
                     } else {

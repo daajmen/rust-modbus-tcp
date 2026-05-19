@@ -12,6 +12,7 @@ pub struct AppState {
     pub active_popup_field: PopupField,
     pub modbus_data: String,
     pub poll_time: u16,
+    pub poll_time_input: String,
     pub counter: u16,
     pub connection_error: bool, 
 }
