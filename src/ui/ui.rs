@@ -12,8 +12,8 @@ use crate::{modbus::modbus_client::{ModbusFunction, ModbusMaster}};
 pub fn render(frame: &mut Frame, app: &mut AppState) {
 
     
-    fn render_register_popup(frame: &mut Frame, trig: bool) {
-        if trig {
+    fn render_register_popup(frame: &mut Frame, app: &mut AppState) {
+        if app.show_register_popup {
             let popup = Rect {
                 x: frame.area().width / 4, 
                 y: frame.area().height / 4,
@@ -34,10 +34,65 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
             popup);
         
         }
+    }
+
+    fn render_config_popup(frame: &mut Frame, app: &mut AppState) {
+        if app.show_config_popup {
+            let popup = Rect {
+                x: frame.area().width / 4, 
+                y: frame.area().height / 4,
+                width: frame.area().width / 2, 
+                height: frame.area().height / 3,  
+            }; 
+
+            frame.render_widget(
+                Clear,
+                popup,
+            );
+
+            let highlight_ip = match app.active_popup_field {
+                PopupField::Ip => Color::Green,
+                _ => Color::Yellow,            
+            };
+
+            let highlight_port = match app.active_popup_field {
+                PopupField::Port => Color::Green,
+                _ => Color::Yellow,
+            };
+
+            let highlight_poll = match app.active_popup_field {
+                PopupField::Poll => Color::Green,
+                _ => Color::Yellow,            
+            };
+
+            frame.render_widget(
+                Paragraph::new(vec![
+                    Line::from(vec![
+                        "IP-Adress: ".into(),
+                        Span::styled(
+                            &app.ip_adress,
+                            Style::default().fg(highlight_ip))]),
+
+                    Line::from(vec![    
+                        "Gateway port: ".into(),
+                        Span::styled(
+                            &app.port,
+                            Style::default().fg(highlight_port))]),
+
+                    Line::from(vec![    
+                        "Polling time: ".into(),
+                        Span::styled(
+                            &app.poll_time_input.to_string(),
+                            Style::default().fg(highlight_poll))]),                        
+                    
+                    ])
+                    .block(Block::new().title("Connection settings ").borders(Borders::ALL)),
+            popup,
+            );
+
+        }
+
     }        
-
-
-
 
 
 
@@ -49,7 +104,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
         " Gateway Configuration ".into(),
         "<C> ".blue().bold(), 
         " Add modbus register ".into(),
-        "<a> ".blue().bold(), 
+        "<A> ".blue().bold(), 
     ]); 
 
     let main_block = Block::new()
@@ -142,64 +197,11 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
         inner_layout[1],
     );
 
-
-    // Gateway configuration popup 
-    if app.show_config_popup {
-        let popup = Rect {
-            x: frame.area().width / 4, 
-            y: frame.area().height / 4,
-            width: frame.area().width / 2, 
-            height: frame.area().height / 3,  
-        }; 
-
-        frame.render_widget(
-            Clear,
-            popup,
-        );
-
-        let highlight_ip = match app.active_popup_field {
-            PopupField::Ip => Color::Green,
-            _ => Color::Yellow,            
-        };
-
-        let highlight_port = match app.active_popup_field {
-            PopupField::Port => Color::Green,
-            _ => Color::Yellow,
-        };
-
-        let highlight_poll = match app.active_popup_field {
-            PopupField::Poll => Color::Green,
-            _ => Color::Yellow,            
-        };
-
-        frame.render_widget(
-            Paragraph::new(vec![
-                Line::from(vec![
-                    "IP-Adress: ".into(),
-                    Span::styled(
-                        &app.ip_adress,
-                        Style::default().fg(highlight_ip))]),
-
-                Line::from(vec![    
-                    "Gateway port: ".into(),
-                    Span::styled(
-                        &app.port,
-                        Style::default().fg(highlight_port))]),
-
-                Line::from(vec![    
-                    "Polling time: ".into(),
-                    Span::styled(
-                        &app.poll_time_input.to_string(),
-                        Style::default().fg(highlight_poll))]),                        
-                
-                ])
-                .block(Block::new().title("Connection settings ").borders(Borders::ALL)),
-        popup,
-        );
-    }
+    // Config popup.
+    render_config_popup(frame, app);
 
     // Register popup. 
-    render_register_popup(frame, app.show_register_popup); 
+    render_register_popup(frame, app); 
 
 }
 
@@ -307,12 +309,23 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                             },
                             _ => {}
                         }                        
-                    } else {
+
+                    } else if app.show_register_popup  {
+                        match key.code {
+                            event::KeyCode::Esc => {
+                                app.show_register_popup = false; 
+                        }
+                        _ => {}
+                        }
+                    } 
+                    
+                    
+                    else {
                         match key.code {
                             event::KeyCode::Char('q') => break Ok(()),
                             event::KeyCode::Char('c') => app.connect_requested = !app.connect_requested,
                             event::KeyCode::Char('C') => app.show_config_popup = true,
-                            event::KeyCode::Char('a') => app.show_register_popup = true,
+                            event::KeyCode::Char('A') => app.show_register_popup = true,
                             event::KeyCode::Esc => app.show_config_popup = false,
                             _ => {},
                         }
