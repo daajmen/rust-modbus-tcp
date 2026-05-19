@@ -10,8 +10,10 @@ pub struct AppState {
     pub connect_requested: bool,
     pub show_config_popup: bool, 
     pub show_register_popup: bool,
+    pub show_register_configure_popup: bool,
     pub active_popup_field: PopupField,
     pub modbus_data: String,
+    pub modbus_request_data: ModbusRequestData,
     pub poll_time: u16,
     pub poll_time_input: String,
     pub counter: u16,
@@ -19,20 +21,30 @@ pub struct AppState {
 }
 
 #[derive(Debug, Default)]
+pub struct ModbusRequestData {
+    pub slave_id: u8,
+    pub function: ModbusFunction, 
+    pub start_addr: u16,
+    pub quantity: u8,
+    pub input_field: ModbusRequestPopupField,
+    pub input_field_popup: bool,
+}
+#[derive(Debug, Default)]
 pub enum PopupField {
     #[default]
     Ip,
     Port,
     Poll,
 }
-
 #[derive(Debug, Default)]
-pub struct ModbusRequest {
-    slave_id: u8,
-    function: ModbusFunction, 
-    start_addr: u16,
-    quantity: u8,
+pub enum ModbusRequestPopupField {
+    #[default]
+    SlavId,
+    StartRegister,
+    Quanity,
 }
+
+
 
 
 pub fn handle_modbus_data(app: &mut AppState, data: Vec<BTreeMap<u16,u16>>) {

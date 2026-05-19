@@ -1,18 +1,43 @@
 use color_eyre::{Result}; 
 use crossterm::event::{self, Event, KeyEventKind}; 
-use ratatui::{DefaultTerminal, Frame, style::{Color, Stylize}, text::{Line}, widgets::{Block, Borders, Paragraph, Clear}}; 
+use ratatui::{DefaultTerminal, Frame, style::{Color, Stylize}, text::Line, widgets::{Block, Borders, Clear, List, ListDirection, ListState, Paragraph}}; 
 use ratatui::layout::{Layout, Direction, Constraint, Rect};
 use ratatui::prelude::*; 
 use std::time::{Duration, Instant};
 
-use crate::ui::app::{AppState, PopupField, handle_modbus_data};
+use crate::ui::app::{AppState, ModbusRequestPopupField, PopupField, handle_modbus_data};
 use crate::{modbus::modbus_client::{ModbusFunction, ModbusMaster}};
 
 
-pub fn render(frame: &mut Frame, app: &mut AppState) {
+pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
 
-    
-    fn render_register_popup(frame: &mut Frame, app: &mut AppState) {
+    fn render_input_popup(frame: &mut Frame, app: &mut AppState) {
+        if app.modbus_request_data.input_field_popup {
+            let popup = Rect {
+                x: frame.area().width / 4, 
+                y: frame.area().height / 4,
+                width: frame.area().width / 6, 
+                height: frame.area().height / 6,  
+            };
+
+            frame.render_widget(
+                Clear,
+                popup,
+            );
+
+            frame.render_widget(
+                Paragraph::new(Line::from("Enter value: "))
+                    .block(Block::new().title("Modbus Register Configuration ").borders(Borders::ALL ))
+                    .style(Color::LightMagenta),
+                popup,
+            );        
+
+        }
+    }
+
+
+    fn render_register_popup(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
+
         if app.show_register_popup {
             let popup = Rect {
                 x: frame.area().width / 4, 
@@ -26,15 +51,55 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
                 popup,
             );
 
-            frame.render_widget( 
-                Paragraph::new(vec![
-                    Line::styled("Hello, world!", (Color::Yellow, Modifier::BOLD))
-                ])
-                .block(Block::new().title(" Add modbus register ").borders(Borders::ALL)),
-            popup);
+            let items = [
+                ModbusFunction::ReadCoilRegister.as_str(),
+                ModbusFunction::ReadInputStatusRegister.as_str(),
+                ModbusFunction::ReadInputRegister.as_str(),
+                ModbusFunction::ReadHoldingRegister.as_str(),
+            ];
+
+            let list = List::new(items)
+                .style(Color::LightMagenta)
+                .highlight_style(Modifier::REVERSED)
+                .highlight_symbol("> ")
+                .block(Block::new().title(" Add modbus register ").borders(Borders::ALL)); 
+
+            frame.render_stateful_widget(list, popup, list_state);
         
         }
     }
+
+    fn render_register_configure_popup(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
+
+        if app.show_register_configure_popup {
+            let popup = Rect {
+                x: frame.area().width / 4, 
+                y: frame.area().height / 4,
+                width: frame.area().width / 2, 
+                height: frame.area().height / 3,  
+            }; 
+
+            frame.render_widget(
+                Clear,
+                popup,
+            );
+
+            let items = [
+                format!("Slave id: {}", app.modbus_request_data.slave_id as u16),
+                format!("Start register {}", app.modbus_request_data.start_addr as u16),
+                format!("Quantiy {}",app.modbus_request_data.quantity as u16),
+            ];
+
+            let list = List::new(items)
+                .style(Color::LightMagenta)
+                .highlight_style(Modifier::REVERSED)
+                .highlight_symbol("> ")
+                .block(Block::new().title(" Add modbus register ").borders(Borders::ALL)); 
+
+            frame.render_stateful_widget(list, popup, list_state);
+        
+        }
+    }    
 
     fn render_config_popup(frame: &mut Frame, app: &mut AppState) {
         if app.show_config_popup {
@@ -86,14 +151,14 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
                             Style::default().fg(highlight_poll))]),                        
                     
                     ])
-                    .block(Block::new().title("Connection settings ").borders(Borders::ALL)),
+                    .block(Block::new().title("Connection settings ").borders(Borders::ALL ))
+                    .style(Color::LightMagenta),
             popup,
             );
 
         }
 
     }        
-
 
 
     let instructions = Line::from(vec![
@@ -201,7 +266,14 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
     render_config_popup(frame, app);
 
     // Register popup. 
-    render_register_popup(frame, app); 
+    render_register_popup(frame, app, list_state); 
+    
+    // Register configure popup.
+    render_register_configure_popup(frame, app, list_state); 
+
+    // Render mini popup 
+    render_input_popup(frame, app);
+
 
 }
 
@@ -210,6 +282,8 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
     let start_adress = 0;
     let quantity = 6;     
     let mut last_poll = Instant::now(); 
+    let mut list_state = ListState::default().with_selected(Some(0));
+
     
 
     // Prepare modbus master 
@@ -258,13 +332,13 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
             master = None;
         }
 
-        terminal.draw(|frame| render(frame, app))?; 
+        terminal.draw(|frame| render(frame, app, &mut list_state))?; 
 
 
         if event::poll(Duration::from_millis(50))? {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press{
-
+                    // CONFIG POPUP 
                     if app.show_config_popup {
                         match key.code {
 
@@ -275,6 +349,7 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                     PopupField::Poll => PopupField::Ip,
                                 }
                             }
+
 
                             event::KeyCode::Backspace => {
                                 match app.active_popup_field {
@@ -308,17 +383,56 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                             
                             },
                             _ => {}
-                        }                        
+                        }
+                    // REGISTER CONFIGURE POPUP    
+                    } else if app.show_register_configure_popup  {
+                        match key.code {
+                            event::KeyCode::Esc => {
+                                app.show_register_configure_popup = false; 
+                                app.modbus_request_data.input_field_popup = false;
 
+                            },
+                            event::KeyCode::Down => list_state.select_next(),
+                            event::KeyCode::Up => list_state.select_previous(), 
+                            event::KeyCode::Enter => {
+                                app.modbus_request_data.input_field_popup = true;
+                                //match app.modbus_request_data.input_field {
+                                //    ModbusRequestPopupField::SlavId => {
+                                //        let Ok(value) =  
+                                //        app.modbus_request_data.slave_id}, 
+                                //    ModbusRequestPopupField::StartRegister => app.modbus_request_data.start_addr, 
+                                //    ModbusRequestPopupField::Quanity => app.modbus_request_data.quantity, 
+                                    
+                                //}
+                            },
+                        _ => {}
+                        }
+
+
+                    // REGISTER POPUP
                     } else if app.show_register_popup  {
                         match key.code {
                             event::KeyCode::Esc => {
-                                app.show_register_popup = false; 
-                        }
+                                app.show_register_popup = false;
+                                app.show_register_configure_popup = false; 
+                            },
+                            event::KeyCode::Down => list_state.select_next(),
+                            event::KeyCode::Up => list_state.select_previous(), 
+                            event::KeyCode::Enter => {
+                                let index_state = list_state.selected();
+                                match index_state {
+                                    Some(0) => app.modbus_request_data.function = ModbusFunction::ReadCoilRegister,
+                                    Some(1) => app.modbus_request_data.function = ModbusFunction::ReadInputStatusRegister,
+                                    Some(2) => app.modbus_request_data.function = ModbusFunction::ReadInputRegister,
+                                    Some(3) => app.modbus_request_data.function = ModbusFunction::ReadHoldingRegister,
+                                    _ => {}
+                                } 
+                                app.show_register_configure_popup = true; 
+                                },
                         _ => {}
                         }
-                    } 
-                    
+
+                    }                     
                     
                     else {
                         match key.code {

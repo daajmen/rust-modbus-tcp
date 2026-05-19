@@ -21,6 +21,18 @@ pub struct ModbusMaster {
     pub stream : Option<TcpStream>,
 }
 
+impl ModbusFunction {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ModbusFunction::ReadCoilRegister => "ReadCoilRegister",
+            ModbusFunction::ReadInputStatusRegister => "ReadInputStatusRegister",
+            ModbusFunction::ReadInputRegister => "ReadInputRegister",
+            ModbusFunction::ReadHoldingRegister => "ReadHoldingRegister",
+            
+        }
+    }
+    
+}
 
 impl ModbusMaster {
     
