@@ -10,7 +10,37 @@ use crate::{modbus::modbus_client::{ModbusFunction, ModbusMaster}};
 
 
 pub fn render(frame: &mut Frame, app: &mut AppState) {
- 
+
+    
+    fn render_register_popup(frame: &mut Frame, trig: bool) {
+        if trig {
+            let popup = Rect {
+                x: frame.area().width / 4, 
+                y: frame.area().height / 4,
+                width: frame.area().width / 2, 
+                height: frame.area().height / 3,  
+            }; 
+
+            frame.render_widget(
+                Clear,
+                popup,
+            );
+
+            frame.render_widget( 
+                Paragraph::new(vec![
+                    Line::styled("Hello, world!", (Color::Yellow, Modifier::BOLD))
+                ])
+                .block(Block::new().title(" Add modbus register ").borders(Borders::ALL)),
+            popup);
+        
+        }
+    }        
+
+
+
+
+
+
     let instructions = Line::from(vec![
         " Quit ".into(),
         "<q> ".blue().bold(),
@@ -20,8 +50,6 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
         "<C> ".blue().bold(), 
         " Add modbus register ".into(),
         "<a> ".blue().bold(), 
-        
-
     ]); 
 
     let main_block = Block::new()
@@ -170,6 +198,9 @@ pub fn render(frame: &mut Frame, app: &mut AppState) {
         );
     }
 
+    // Register popup. 
+    render_register_popup(frame, app.show_register_popup); 
+
 }
 
 pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
@@ -281,7 +312,7 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                             event::KeyCode::Char('q') => break Ok(()),
                             event::KeyCode::Char('c') => app.connect_requested = !app.connect_requested,
                             event::KeyCode::Char('C') => app.show_config_popup = true,
-                            event::KeyCode::Char('a') => todo!(),
+                            event::KeyCode::Char('a') => app.show_register_popup = true,
                             event::KeyCode::Esc => app.show_config_popup = false,
                             _ => {},
                         }

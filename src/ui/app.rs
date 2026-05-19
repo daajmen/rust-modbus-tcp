@@ -9,6 +9,7 @@ pub struct AppState {
     pub slave_id: u8,
     pub connect_requested: bool,
     pub show_config_popup: bool, 
+    pub show_register_popup: bool,
     pub active_popup_field: PopupField,
     pub modbus_data: String,
     pub poll_time: u16,
@@ -30,9 +31,7 @@ pub struct ModbusRequest {
     slave_id: u8,
     function: ModbusFunction, 
     start_addr: u16,
-    quantity: u8, 
-
-
+    quantity: u8,
 }
 
 

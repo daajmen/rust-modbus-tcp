@@ -13,6 +13,7 @@ fn main() -> Result<()> {
         slave_id: 1, 
         connect_requested: false, 
         show_config_popup: false, 
+        show_register_popup: false,
         active_popup_field: PopupField::Ip,
         modbus_data: "".to_string(),
         poll_time: 1500,
