@@ -5,14 +5,14 @@ use ratatui::layout::{Layout, Direction, Constraint, Rect};
 use ratatui::prelude::*; 
 use std::time::{Duration, Instant};
 
-use crate::ui::app::{AppState, ModbusRequestPopupField, PopupField, handle_modbus_data};
+use crate::ui::app::{AppState, ModbusRequestPopupField, PopupField, UiStates, handle_modbus_data};
 use crate::{modbus::modbus_client::{ModbusFunction, ModbusMaster}};
 
 
 pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
 
     fn render_input_popup(frame: &mut Frame, app: &mut AppState) {
-        if app.modbus_request_data.input_field_popup {
+
             let popup = Rect {
                 x: frame.area().width / 4, 
                 y: frame.area().height / 4,
@@ -32,7 +32,6 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
                 popup,
             );        
 
-        }
     }
 
 
@@ -71,7 +70,6 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
 
     fn render_register_configure_popup(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
 
-        if app.show_register_configure_popup {
             let popup = Rect {
                 x: frame.area().width / 4, 
                 y: frame.area().height / 4,
@@ -98,66 +96,64 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
 
             frame.render_stateful_widget(list, popup, list_state);
         
-        }
+        
     }    
 
     fn render_config_popup(frame: &mut Frame, app: &mut AppState) {
-        if app.show_config_popup {
-            let popup = Rect {
-                x: frame.area().width / 4, 
-                y: frame.area().height / 4,
-                width: frame.area().width / 2, 
-                height: frame.area().height / 3,  
-            }; 
+        let popup = Rect {
+            x: frame.area().width / 4, 
+            y: frame.area().height / 4,
+            width: frame.area().width / 2, 
+            height: frame.area().height / 3,  
+        }; 
 
-            frame.render_widget(
-                Clear,
-                popup,
-            );
+        frame.render_widget(
+            Clear,
+            popup,
+        );
 
-            let highlight_ip = match app.active_popup_field {
-                PopupField::Ip => Color::Green,
-                _ => Color::Yellow,            
-            };
+        let highlight_ip = match app.active_popup_field {
+            PopupField::Ip => Color::Green,
+            _ => Color::Yellow,            
+        };
 
-            let highlight_port = match app.active_popup_field {
-                PopupField::Port => Color::Green,
-                _ => Color::Yellow,
-            };
+        let highlight_port = match app.active_popup_field {
+            PopupField::Port => Color::Green,
+            _ => Color::Yellow,
+        };
 
-            let highlight_poll = match app.active_popup_field {
-                PopupField::Poll => Color::Green,
-                _ => Color::Yellow,            
-            };
+        let highlight_poll = match app.active_popup_field {
+            PopupField::Poll => Color::Green,
+            _ => Color::Yellow,            
+        };
 
-            frame.render_widget(
-                Paragraph::new(vec![
-                    Line::from(vec![
-                        "IP-Adress: ".into(),
-                        Span::styled(
-                            &app.ip_adress,
-                            Style::default().fg(highlight_ip))]),
+        frame.render_widget(
+            Paragraph::new(vec![
+                Line::from(vec![
+                    "IP-Adress: ".into(),
+                    Span::styled(
+                        &app.ip_adress,
+                        Style::default().fg(highlight_ip))]),
 
-                    Line::from(vec![    
-                        "Gateway port: ".into(),
-                        Span::styled(
-                            &app.port,
-                            Style::default().fg(highlight_port))]),
+                Line::from(vec![    
+                    "Gateway port: ".into(),
+                    Span::styled(
+                        &app.port,
+                        Style::default().fg(highlight_port))]),
 
-                    Line::from(vec![    
-                        "Polling time: ".into(),
-                        Span::styled(
-                            &app.poll_time_input.to_string(),
-                            Style::default().fg(highlight_poll))]),                        
+                Line::from(vec![    
+                    "Polling time: ".into(),
+                    Span::styled(
+                        &app.poll_time_input.to_string(),
+                        Style::default().fg(highlight_poll))]),                        
                     
-                    ])
-                    .block(Block::new().title("Connection settings ").borders(Borders::ALL ))
-                    .style(Color::LightMagenta),
+                ])
+                .block(Block::new().title("Connection settings ").borders(Borders::ALL ))
+                .style(Color::LightMagenta),
             popup,
             );
 
-        }
-
+        
     }        
 
 
@@ -262,17 +258,20 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
         inner_layout[1],
     );
 
-    // Config popup.
-    render_config_popup(frame, app);
-
-    // Register popup. 
-    render_register_popup(frame, app, list_state); 
     
     // Register configure popup.
-    render_register_configure_popup(frame, app, list_state); 
+    //render_register_configure_popup(frame, app, list_state); 
 
-    // Render mini popup 
-    render_input_popup(frame, app);
+    match app.ui_state {
+        UiStates::AddRegistersInput => {
+            render_register_popup(frame, app, list_state);
+        }
+        UiStates::ConfGateway => {
+            render_config_popup(frame, app);
+        }
+        _ => {}
+    }
+    
 
 
 }
@@ -338,54 +337,8 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
         if event::poll(Duration::from_millis(50))? {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press{
-                    // CONFIG POPUP 
-                    if app.show_config_popup {
-                        match key.code {
-
-                            event::KeyCode::Tab => {
-                                app.active_popup_field = match app.active_popup_field {
-                                    PopupField::Ip => PopupField::Port,
-                                    PopupField::Port => PopupField::Poll,
-                                    PopupField::Poll => PopupField::Ip,
-                                }
-                            }
-
-
-                            event::KeyCode::Backspace => {
-                                match app.active_popup_field {
-                                    PopupField::Ip => { app.ip_adress.pop(); }
-                                    PopupField::Port => { app.port.pop(); }
-                                    PopupField::Poll => { 
-                                        app.poll_time_input.pop();
-                                        
-                                        if let Ok(value) = app.poll_time_input.parse::<u16>() {
-                                            app.poll_time = value;
-                                        }
-                                    
-                                     }
-                                }
-                            }
-
-                            event::KeyCode::Char(c) => {
-                                match app.active_popup_field {
-                                    PopupField::Ip => app.ip_adress.push(c),
-                                    PopupField::Port => app.port.push(c),
-                                    PopupField::Poll => app.poll_time_input.push(c),
-                                }
-                            }
-
-                            event::KeyCode::Esc => {
-                                app.show_config_popup = false;
-
-                                if let Ok(value) = app.poll_time_input.parse::<u16>() {
-                                    app.poll_time = value;
-                                }
-                            
-                            },
-                            _ => {}
-                        }
                     // REGISTER CONFIGURE POPUP    
-                    } else if app.show_register_configure_popup  {
+                    if app.show_register_configure_popup  {
                         match key.code {
                             event::KeyCode::Esc => {
                                 app.show_register_configure_popup = false; 
@@ -396,14 +349,6 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                             event::KeyCode::Up => list_state.select_previous(), 
                             event::KeyCode::Enter => {
                                 app.modbus_request_data.input_field_popup = true;
-                                //match app.modbus_request_data.input_field {
-                                //    ModbusRequestPopupField::SlavId => {
-                                //        let Ok(value) =  
-                                //        app.modbus_request_data.slave_id}, 
-                                //    ModbusRequestPopupField::StartRegister => app.modbus_request_data.start_addr, 
-                                //    ModbusRequestPopupField::Quanity => app.modbus_request_data.quantity, 
-                                    
-                                //}
                             },
                         _ => {}
                         }
@@ -414,20 +359,34 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                         match key.code {
                             event::KeyCode::Esc => {
                                 app.show_register_popup = false;
-                                app.show_register_configure_popup = false; 
+                                app.show_register_configure_popup = false;
+                                app.ui_state = UiStates::AddRegisters; 
                             },
                             event::KeyCode::Down => list_state.select_next(),
                             event::KeyCode::Up => list_state.select_previous(), 
                             event::KeyCode::Enter => {
                                 let index_state = list_state.selected();
                                 match index_state {
-                                    Some(0) => app.modbus_request_data.function = ModbusFunction::ReadCoilRegister,
-                                    Some(1) => app.modbus_request_data.function = ModbusFunction::ReadInputStatusRegister,
-                                    Some(2) => app.modbus_request_data.function = ModbusFunction::ReadInputRegister,
-                                    Some(3) => app.modbus_request_data.function = ModbusFunction::ReadHoldingRegister,
+                                    Some(0) => {
+                                        app.modbus_request_data.function = ModbusFunction::ReadCoilRegister;
+                                        app.ui_state = UiStates::AddRegistersInput;
+                                    },
+                                    Some(1) => {
+                                        app.modbus_request_data.function = ModbusFunction::ReadInputStatusRegister;
+                                        app.ui_state = UiStates::AddRegistersInput;
+                                    },
+                                    Some(2) => {
+                                        app.modbus_request_data.function = ModbusFunction::ReadInputRegister;
+                                        app.ui_state = UiStates::AddRegistersInput;
+                                    },
+                                    Some(3) => {
+                                        app.modbus_request_data.function = ModbusFunction::ReadHoldingRegister;
+                                        app.ui_state = UiStates::AddRegistersInput;
+                                    }
                                     _ => {}
                                 } 
-                                app.show_register_configure_popup = true; 
+                                 
+
                                 },
                         _ => {}
                         }
@@ -438,9 +397,64 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                         match key.code {
                             event::KeyCode::Char('q') => break Ok(()),
                             event::KeyCode::Char('c') => app.connect_requested = !app.connect_requested,
-                            event::KeyCode::Char('C') => app.show_config_popup = true,
+                            event::KeyCode::Char('C') => app.ui_state = UiStates::ConfGateway,
                             event::KeyCode::Char('A') => app.show_register_popup = true,
-                            event::KeyCode::Esc => app.show_config_popup = false,
+                            event::KeyCode::Char(c) => {
+                                match app.ui_state {
+                                    UiStates::ConfGateway => {
+                                        match app.active_popup_field {
+                                            PopupField::Ip => app.ip_adress.push(c),
+                                            PopupField::Port => app.port.push(c),
+                                            PopupField::Poll => app.poll_time_input.push(c),
+                                        }
+                                    }
+                                _ => {}
+                                }
+                            }
+                            event::KeyCode::Esc => {
+                                match app.ui_state {
+                                    UiStates::ConfGateway => {
+                                        app.ui_state = UiStates::Home;
+
+                                        if let Ok(value) = app.poll_time_input.parse::<u16>() {
+                                            app.poll_time = value;
+                                        }
+                                    }
+                                _ => {}
+                                }
+                            }
+                            event::KeyCode::Tab => {
+                                match app.ui_state {
+                                    UiStates::ConfGateway => {
+                                        app.active_popup_field = match app.active_popup_field {
+                                            PopupField::Ip => PopupField::Port,
+                                            PopupField::Port => PopupField::Poll,
+                                            PopupField::Poll => PopupField::Ip,
+                                            }
+                                    }
+                                _ => {}
+                                }
+                            }
+                            event::KeyCode::Backspace => {
+                                match app.ui_state {
+                                    UiStates::ConfGateway => {
+                                        match app.active_popup_field {
+                                            PopupField::Ip => { app.ip_adress.pop(); }
+                                            PopupField::Port => { app.port.pop(); }
+                                            PopupField::Poll => { 
+                                                app.poll_time_input.pop();
+                                                
+                                                if let Ok(value) = app.poll_time_input.parse::<u16>() {
+                                                    app.poll_time = value;
+                                                }
+                                            
+                                            }
+                                        }
+                                    }
+                                _ => {}
+                                }
+                            }
+
                             _ => {},
                         }
 

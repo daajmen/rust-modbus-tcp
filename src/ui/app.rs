@@ -8,7 +8,6 @@ pub struct AppState {
     pub port: String, 
     pub slave_id: u8,
     pub connect_requested: bool,
-    pub show_config_popup: bool, 
     pub show_register_popup: bool,
     pub show_register_configure_popup: bool,
     pub active_popup_field: PopupField,
@@ -18,6 +17,7 @@ pub struct AppState {
     pub poll_time_input: String,
     pub counter: u16,
     pub connection_error: bool, 
+    pub ui_state: UiStates,
 }
 
 #[derive(Debug, Default)]
@@ -44,6 +44,14 @@ pub enum ModbusRequestPopupField {
     Quanity,
 }
 
+#[derive(Debug, Default)]
+pub enum UiStates {
+    #[default]
+    Home,
+    ConfGateway,
+    AddRegisters,
+    AddRegistersInput,
+}
 
 
 

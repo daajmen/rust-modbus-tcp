@@ -1,5 +1,5 @@
 use color_eyre::{Result};  
-use crate::ui::app::{AppState, PopupField, ModbusRequestPopupField};
+use crate::ui::app::{AppState, ModbusRequestPopupField, PopupField, UiStates};
 use crate::modbus::modbus_client::{ModbusFunction};
 use ui::ui::run; 
 
@@ -13,7 +13,6 @@ fn main() -> Result<()> {
         port: "502".to_string(), 
         slave_id: 1, 
         connect_requested: false, 
-        show_config_popup: false, 
         show_register_popup: false,
         show_register_configure_popup: false, 
         active_popup_field: PopupField::Ip,
@@ -22,7 +21,8 @@ fn main() -> Result<()> {
         poll_time: 1500,
         poll_time_input: "1500".to_string(), 
         counter: 0,
-        connection_error: false, 
+        connection_error: false,
+        ui_state: UiStates::Home, 
     };
 
 
