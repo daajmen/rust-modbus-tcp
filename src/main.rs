@@ -13,8 +13,6 @@ fn main() -> Result<()> {
         port: "502".to_string(), 
         slave_id: 1, 
         connect_requested: false, 
-        show_register_popup: false,
-        show_register_configure_popup: false, 
         active_popup_field: PopupField::Ip,
         modbus_data: "".to_string(),
         modbus_request_data: { ui::app::ModbusRequestData { slave_id: 1, function: ModbusFunction::ReadCoilRegister, start_addr: 1, quantity: 1 , input_field: ModbusRequestPopupField::StartRegister, input_field_popup: false}}, 

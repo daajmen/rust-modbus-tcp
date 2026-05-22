@@ -8,8 +8,6 @@ pub struct AppState {
     pub port: String, 
     pub slave_id: u8,
     pub connect_requested: bool,
-    pub show_register_popup: bool,
-    pub show_register_configure_popup: bool,
     pub active_popup_field: PopupField,
     pub modbus_data: String,
     pub modbus_request_data: ModbusRequestData,

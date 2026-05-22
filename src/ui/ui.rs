@@ -37,7 +37,6 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
 
     fn render_register_popup(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
 
-        if app.show_register_popup {
             let popup = Rect {
                 x: frame.area().width / 4, 
                 y: frame.area().height / 4,
@@ -65,7 +64,6 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
 
             frame.render_stateful_widget(list, popup, list_state);
         
-        }
     }
 
     fn render_register_configure_popup(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
@@ -258,16 +256,16 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
         inner_layout[1],
     );
 
-    
-    // Register configure popup.
-    //render_register_configure_popup(frame, app, list_state); 
 
     match app.ui_state {
-        UiStates::AddRegistersInput => {
-            render_register_popup(frame, app, list_state);
-        }
         UiStates::ConfGateway => {
             render_config_popup(frame, app);
+        }
+        UiStates::AddRegisters => {
+            render_register_popup(frame, app, list_state);
+        }
+        UiStates::AddRegistersInput => {
+            render_register_configure_popup(frame, app, list_state);
         }
         _ => {}
     }
@@ -338,67 +336,11 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press{
                     // REGISTER CONFIGURE POPUP    
-                    if app.show_register_configure_popup  {
-                        match key.code {
-                            event::KeyCode::Esc => {
-                                app.show_register_configure_popup = false; 
-                                app.modbus_request_data.input_field_popup = false;
-
-                            },
-                            event::KeyCode::Down => list_state.select_next(),
-                            event::KeyCode::Up => list_state.select_previous(), 
-                            event::KeyCode::Enter => {
-                                app.modbus_request_data.input_field_popup = true;
-                            },
-                        _ => {}
-                        }
-
-
-                    // REGISTER POPUP
-                    } else if app.show_register_popup  {
-                        match key.code {
-                            event::KeyCode::Esc => {
-                                app.show_register_popup = false;
-                                app.show_register_configure_popup = false;
-                                app.ui_state = UiStates::AddRegisters; 
-                            },
-                            event::KeyCode::Down => list_state.select_next(),
-                            event::KeyCode::Up => list_state.select_previous(), 
-                            event::KeyCode::Enter => {
-                                let index_state = list_state.selected();
-                                match index_state {
-                                    Some(0) => {
-                                        app.modbus_request_data.function = ModbusFunction::ReadCoilRegister;
-                                        app.ui_state = UiStates::AddRegistersInput;
-                                    },
-                                    Some(1) => {
-                                        app.modbus_request_data.function = ModbusFunction::ReadInputStatusRegister;
-                                        app.ui_state = UiStates::AddRegistersInput;
-                                    },
-                                    Some(2) => {
-                                        app.modbus_request_data.function = ModbusFunction::ReadInputRegister;
-                                        app.ui_state = UiStates::AddRegistersInput;
-                                    },
-                                    Some(3) => {
-                                        app.modbus_request_data.function = ModbusFunction::ReadHoldingRegister;
-                                        app.ui_state = UiStates::AddRegistersInput;
-                                    }
-                                    _ => {}
-                                } 
-                                 
-
-                                },
-                        _ => {}
-                        }
-
-                    }                     
-                    
-                    else {
                         match key.code {
                             event::KeyCode::Char('q') => break Ok(()),
                             event::KeyCode::Char('c') => app.connect_requested = !app.connect_requested,
                             event::KeyCode::Char('C') => app.ui_state = UiStates::ConfGateway,
-                            event::KeyCode::Char('A') => app.show_register_popup = true,
+                            event::KeyCode::Char('A') => app.ui_state = UiStates::AddRegisters,
                             event::KeyCode::Char(c) => {
                                 match app.ui_state {
                                     UiStates::ConfGateway => {
@@ -419,6 +361,9 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                         if let Ok(value) = app.poll_time_input.parse::<u16>() {
                                             app.poll_time = value;
                                         }
+                                    },
+                                    UiStates::AddRegisters => {
+                                        app.ui_state = UiStates::Home; 
                                     }
                                 _ => {}
                                 }
@@ -454,11 +399,55 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                 _ => {}
                                 }
                             }
+                            event::KeyCode::Down => {
+                                match app.ui_state {
+                                    UiStates::AddRegisters | UiStates::AddRegistersInput => {
+                                        list_state.select_next();
+                                    },
+                                _ => {}
+                                }
+                                
+                            }
+                            event::KeyCode::Up => {
+                                match app.ui_state {
+                                    UiStates::AddRegisters | UiStates::AddRegistersInput => {
+                                        list_state.select_previous();
+                                    },
+                                _ => {}
+                                }
+                                
+                            }
+                            event::KeyCode::Enter => {
+                                match app.ui_state {
+                                    UiStates::AddRegisters => {
+                                        let index_state = list_state.selected();
+                                        match index_state {
+                                           Some(0) => {
+                                               app.modbus_request_data.function = ModbusFunction::ReadCoilRegister;
+                                               app.ui_state = UiStates::AddRegistersInput;
+                                           },
+                                           Some(1) => {
+                                               app.modbus_request_data.function = ModbusFunction::ReadInputStatusRegister;
+                                               app.ui_state = UiStates::AddRegistersInput;
+                                           },
+                                           Some(2) => {
+                                               app.modbus_request_data.function = ModbusFunction::ReadInputRegister;
+                                               app.ui_state = UiStates::AddRegistersInput;
+                                           },
+                                           Some(3) => {
+                                               app.modbus_request_data.function = ModbusFunction::ReadHoldingRegister;
+                                               app.ui_state = UiStates::AddRegistersInput;
+                                           }
+                                           _ => {}
+                                        } 
+                                    },
+                                _ => {}
+                                }
+                                
+                            }                            
 
                             _ => {},
                         }
-
-                    }
 
                 }
             }
