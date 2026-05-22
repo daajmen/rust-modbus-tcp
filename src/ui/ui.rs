@@ -331,7 +331,6 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
 
         terminal.draw(|frame| render(frame, app, &mut list_state))?; 
 
-
         if event::poll(Duration::from_millis(50))? {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press{
@@ -349,6 +348,22 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                             PopupField::Port => app.port.push(c),
                                             PopupField::Poll => app.poll_time_input.push(c),
                                         }
+                                    }
+                                    UiStates::AddRegistersInput => {
+                                        let index_state = list_state.selected();
+                                            match index_state {
+                                                Some(0) => {
+                                                    let mut temp = format!("{}", app.modbus_request_data.slave_id);
+                                                    temp.push(c); 
+
+                                                    if let Ok(value) = temp.parse::<u8>() {
+                                                        app.modbus_request_data.slave_id = value; 
+                                                    }
+                                                }
+                                            _ => {}
+                                           }
+
+                                           
                                     }
                                 _ => {}
                                 }
@@ -396,6 +411,22 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                             }
                                         }
                                     }
+                                    UiStates::AddRegistersInput => {
+                                        let index_state = list_state.selected();
+                                            match index_state {
+                                                Some(0) => {
+                                                    let mut temp = format!("{}", app.modbus_request_data.slave_id);
+                                                    temp.pop(); 
+
+                                                    if let Ok(value) = temp.parse::<u8>() {
+                                                        app.modbus_request_data.slave_id = value; 
+                                                    }
+                                                }
+                                            _ => {}
+                                           }
+
+                                           
+                                    }                                    
                                 _ => {}
                                 }
                             }
