@@ -359,6 +359,22 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                                     if let Ok(value) = temp.parse::<u8>() {
                                                         app.modbus_request_data.slave_id = value; 
                                                     }
+                                                },
+                                                Some(1) => {
+                                                    let mut temp = format!("{}", app.modbus_request_data.start_addr);
+                                                    temp.push(c); 
+
+                                                    if let Ok(value) = temp.parse::<u16>() {
+                                                        app.modbus_request_data.start_addr = value; 
+                                                    }
+                                                },
+                                                Some(2) => {
+                                                    let mut temp = format!("{}", app.modbus_request_data.quantity);
+                                                    temp.push(c); 
+
+                                                    if let Ok(value) = temp.parse::<u8>() {
+                                                        app.modbus_request_data.quantity = value; 
+                                                    }
                                                 }
                                             _ => {}
                                            }
@@ -379,7 +395,10 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                     },
                                     UiStates::AddRegisters => {
                                         app.ui_state = UiStates::Home; 
-                                    }
+                                    },
+                                    UiStates::AddRegistersInput => {
+                                        app.ui_state = UiStates::AddRegisters; 
+                                    }                                    
                                 _ => {}
                                 }
                             }
@@ -422,6 +441,22 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                                         app.modbus_request_data.slave_id = value; 
                                                     }
                                                 }
+                                                Some(1) => {
+                                                    let mut temp = format!("{}", app.modbus_request_data.start_addr);
+                                                    temp.pop(); 
+
+                                                    if let Ok(value) = temp.parse::<u16>() {
+                                                        app.modbus_request_data.start_addr = value; 
+                                                    }
+                                                }
+                                                Some(2) => {
+                                                    let mut temp = format!("{}", app.modbus_request_data.quantity);
+                                                    temp.pop(); 
+
+                                                    if let Ok(value) = temp.parse::<u8>() {
+                                                        app.modbus_request_data.quantity = value; 
+                                                    }                                                    
+                                                }                                                
                                             _ => {}
                                            }
 
