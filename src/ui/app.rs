@@ -11,6 +11,7 @@ pub struct AppState {
     pub active_popup_field: PopupField,
     pub modbus_data: String,
     pub modbus_request_data: ModbusRequestData,
+    pub modbus_write_request: bool, 
     pub poll_time: u16,
     pub poll_time_input: String,
     pub counter: u16,
@@ -27,6 +28,29 @@ pub struct ModbusRequestData {
     pub input_field: ModbusRequestPopupField,
     pub input_field_popup: bool,
 }
+
+impl ModbusRequestData {
+    pub fn as_string(&self) -> String {
+        format!(
+            "id: {}\n{:?}\nStartReg: {}\nQuanity: {} \n---------",
+            match self.slave_id {
+                Some(v) => v.to_string(),
+                None => "-".to_string(),
+            },
+            self.function,
+            match self.start_addr {
+                Some(v) => v.to_string(),
+                None => "-".to_string(),
+            },
+            match self.quantity {
+                Some(v) => v.to_string(),
+                None => "-".to_string(),
+            }
+        )
+    }
+    
+}
+
 #[derive(Debug, Default)]
 pub enum PopupField {
     #[default]

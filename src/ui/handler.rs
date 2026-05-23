@@ -112,6 +112,7 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                             _ => {}
                             }
                         }
+                        // Escape
                         event::KeyCode::Esc => {
                             match app.ui_state {
                                 UiStates::ConfGateway => {
@@ -129,6 +130,7 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                             _ => {}
                             }
                         }
+                        // Tab
                         event::KeyCode::Tab => {
                             match app.ui_state {
                                 UiStates::ConfGateway => {
@@ -141,6 +143,7 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                             _ => {}
                             }
                         }
+                        // Backspace
                         event::KeyCode::Backspace => {
                             match app.ui_state {
                                 UiStates::ConfGateway => {
@@ -176,6 +179,7 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                             _ => {}
                             }
                         }
+                        // Down 
                         event::KeyCode::Down => {
                             match app.ui_state {
                                 UiStates::AddRegisters | UiStates::AddRegistersInput => {
@@ -185,6 +189,7 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                             }
                             
                         }
+                        // Up
                         event::KeyCode::Up => {
                             match app.ui_state {
                                 UiStates::AddRegisters | UiStates::AddRegistersInput => {
@@ -194,6 +199,7 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                             }
                             
                         }
+                        // Enter 
                         event::KeyCode::Enter => {
                             match app.ui_state {
                                 UiStates::AddRegisters => {
@@ -218,6 +224,14 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                                     _ => {}
                                     } 
                                 },
+                                UiStates::AddRegistersInput => {
+                                    if app.modbus_request_data.slave_id.is_some() && 
+                                    app.modbus_request_data.start_addr.is_some() && 
+                                    app.modbus_request_data.quantity.is_some() {
+                                        app.modbus_write_request = true; 
+                                        app.ui_state = UiStates::AddRegisters; 
+                                    }
+                                }
                             _ => {}
                             }
                             

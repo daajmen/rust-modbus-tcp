@@ -2,9 +2,9 @@ use color_eyre::{Result};
 use ratatui::{DefaultTerminal, Frame, style::{Color, Stylize}, text::Line, widgets::{Block, Borders, Clear, List, ListState, Paragraph}}; 
 use ratatui::layout::{Layout, Direction, Constraint, Rect};
 use ratatui::prelude::*; 
-use std:: time::{Duration, Instant};
+use std::{ time::{Duration, Instant}, vec};
 
-use crate::ui::app::{AppState, ModbusRequestPopupField, PopupField, UiStates, handle_modbus_data};
+use crate::ui::app::{AppState, ModbusRequestData, ModbusRequestPopupField, PopupField, UiStates, handle_modbus_data};
 use crate::{modbus::modbus_client::{ModbusFunction, ModbusMaster}};
 use crate::ui::handler::handle_event;
 
@@ -173,13 +173,21 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
             Constraint::Percentage(25),
             Constraint::Percentage(75)])
         .split(outer_layout[1]);     
+    
+    //let mut items: Vec<ModbusRequestData> = Vec::new();
+    let mut items = [app.modbus_request_data.as_string()];
 
+    // Temporary 
 
-    frame.render_widget(
-        Paragraph::new(" Modbus registers ")
-        .block(Block::new().bold().fg(Color::Blue).borders(Borders::ALL)),
-        outer_layout[0],
-    );
+    let list = List::new(items)
+            .block(
+                Block::new()
+                .title(" Modbus register ")
+                .bold()
+                .fg(Color::Blue)
+                .borders(Borders::ALL)
+            );
+    frame.render_widget(list, outer_layout[0]);
  
     let connection_status: &str;
     let connection_color: Color;
@@ -317,6 +325,7 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
 
         terminal.draw(|frame| render(frame, app, &mut list_state))?; 
 
+        // Key event handle
         if handle_event(app, &mut list_state)? {
             break Ok(())
         }
