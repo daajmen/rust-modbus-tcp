@@ -20,10 +20,10 @@ pub struct AppState {
 
 #[derive(Debug, Default)]
 pub struct ModbusRequestData {
-    pub slave_id: u8,
+    pub slave_id: Option<u8>,
     pub function: ModbusFunction, 
-    pub start_addr: u16,
-    pub quantity: u8,
+    pub start_addr: Option<u16>,
+    pub quantity: Option<u8>,
     pub input_field: ModbusRequestPopupField,
     pub input_field_popup: bool,
 }

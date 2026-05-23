@@ -15,7 +15,7 @@ fn main() -> Result<()> {
         connect_requested: false, 
         active_popup_field: PopupField::Ip,
         modbus_data: "".to_string(),
-        modbus_request_data: { ui::app::ModbusRequestData { slave_id: 1, function: ModbusFunction::ReadCoilRegister, start_addr: 1, quantity: 1 , input_field: ModbusRequestPopupField::StartRegister, input_field_popup: false}}, 
+        modbus_request_data: { ui::app::ModbusRequestData { slave_id: None, function: ModbusFunction::ReadCoilRegister, start_addr: None, quantity: None, input_field: ModbusRequestPopupField::StartRegister, input_field_popup: false}}, 
         poll_time: 1500,
         poll_time_input: "1500".to_string(), 
         counter: 0,

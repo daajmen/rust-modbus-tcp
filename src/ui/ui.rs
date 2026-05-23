@@ -1,39 +1,15 @@
 use color_eyre::{Result}; 
 use crossterm::event::{self, Event, KeyEventKind}; 
-use ratatui::{DefaultTerminal, Frame, style::{Color, Stylize}, text::Line, widgets::{Block, Borders, Clear, List, ListDirection, ListState, Paragraph}}; 
+use ratatui::{DefaultTerminal, Frame, style::{Color, Stylize}, text::Line, widgets::{Block, Borders, Clear, List, ListState, Paragraph}}; 
 use ratatui::layout::{Layout, Direction, Constraint, Rect};
 use ratatui::prelude::*; 
-use std::time::{Duration, Instant};
+use std:: time::{Duration, Instant};
 
 use crate::ui::app::{AppState, ModbusRequestPopupField, PopupField, UiStates, handle_modbus_data};
 use crate::{modbus::modbus_client::{ModbusFunction, ModbusMaster}};
 
 
 pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
-
-    fn render_input_popup(frame: &mut Frame, app: &mut AppState) {
-
-            let popup = Rect {
-                x: frame.area().width / 4, 
-                y: frame.area().height / 4,
-                width: frame.area().width / 6, 
-                height: frame.area().height / 6,  
-            };
-
-            frame.render_widget(
-                Clear,
-                popup,
-            );
-
-            frame.render_widget(
-                Paragraph::new(Line::from("Enter value: "))
-                    .block(Block::new().title("Modbus Register Configuration ").borders(Borders::ALL ))
-                    .style(Color::LightMagenta),
-                popup,
-            );        
-
-    }
-
 
     fn render_register_popup(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
 
@@ -81,9 +57,18 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
             );
 
             let items = [
-                format!("Slave id: {}", app.modbus_request_data.slave_id as u16),
-                format!("Start register {}", app.modbus_request_data.start_addr as u16),
-                format!("Quantiy {}",app.modbus_request_data.quantity as u16),
+                match app.modbus_request_data.slave_id {
+                    Some(value) => format!("Slave id: {}", value),
+                    None =>  format!("Slave id: None", ),
+                },
+                match app.modbus_request_data.start_addr {
+                    Some(value) => format!("Start register: {}", value),
+                    None =>  format!("Start register: None", ),
+                },
+                match app.modbus_request_data.quantity {
+                    Some(value) => format!("Quantity: {}", value),
+                    None =>  format!("Quantity: None", ),
+                }                                  
             ];
 
             let list = List::new(items)
@@ -275,6 +260,48 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
 }
 
 pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
+
+    /// function to help with to remove the single value
+    fn backspace_rm_u8(input_value: Option<u8> ) -> Option<u8> {
+        let mut temp = String::new(); 
+        match input_value {
+            Some(value) => {
+                if value < 10 {
+                    return None; 
+                }
+                temp = format!("{}", value);
+                temp.pop(); 
+                if let Ok(value) = temp.parse::<u8>() {
+                    return Some(value); 
+                } else {
+                    return None;
+                }                   
+            }
+        _ => {None}
+        }
+    }
+
+    fn backspace_rm_u16(input_value: Option<u16> ) -> Option<u16> {
+        let mut temp = String::new(); 
+        match input_value {
+            Some(value) => {
+                if value < 10 {
+                    return None; 
+                }
+                temp = format!("{}", value);
+                temp.pop(); 
+                if let Ok(value) = temp.parse::<u16>() {
+                    return Some(value); 
+                } else {
+                    return None;
+                }                   
+            }
+        _ => {None}
+        }
+    }
+
+    
+
     // TODO CLEAN 
     let start_adress = 0;
     let quantity = 6;     
@@ -353,27 +380,39 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                         let index_state = list_state.selected();
                                             match index_state {
                                                 Some(0) => {
-                                                    let mut temp = format!("{}", app.modbus_request_data.slave_id);
+                                                    let mut temp = String::new();
+                                                    match app.modbus_request_data.slave_id {
+                                                        Some(value) => temp = format!("{}", value),
+                                                        None => ()
+                                                    }
                                                     temp.push(c); 
 
-                                                    if let Ok(value) = temp.parse::<u8>() {
-                                                        app.modbus_request_data.slave_id = value; 
+                                                    if let Ok(parsed_value) = temp.parse::<u8>() {
+                                                        app.modbus_request_data.slave_id = Some(parsed_value); 
                                                     }
                                                 },
                                                 Some(1) => {
-                                                    let mut temp = format!("{}", app.modbus_request_data.start_addr);
+                                                    let mut temp = String::new();
+                                                    match app.modbus_request_data.start_addr {
+                                                        Some(value) => temp = format!("{}", value),
+                                                        None => ()
+                                                    }
                                                     temp.push(c); 
 
                                                     if let Ok(value) = temp.parse::<u16>() {
-                                                        app.modbus_request_data.start_addr = value; 
+                                                        app.modbus_request_data.start_addr = Some(value); 
                                                     }
                                                 },
                                                 Some(2) => {
-                                                    let mut temp = format!("{}", app.modbus_request_data.quantity);
+                                                    let mut temp = String::new();
+                                                    match app.modbus_request_data.quantity {
+                                                        Some(value) => temp = format!("{}", value),
+                                                        None => ()
+                                                    }
                                                     temp.push(c); 
 
                                                     if let Ok(value) = temp.parse::<u8>() {
-                                                        app.modbus_request_data.quantity = value; 
+                                                        app.modbus_request_data.quantity = Some(value); 
                                                     }
                                                 }
                                             _ => {}
@@ -434,29 +473,14 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                                         let index_state = list_state.selected();
                                             match index_state {
                                                 Some(0) => {
-                                                    let mut temp = format!("{}", app.modbus_request_data.slave_id);
-                                                    temp.pop(); 
-
-                                                    if let Ok(value) = temp.parse::<u8>() {
-                                                        app.modbus_request_data.slave_id = value; 
-                                                    }
-                                                }
+                                                    app.modbus_request_data.slave_id = backspace_rm_u8(app.modbus_request_data.slave_id);
+                                                } 
                                                 Some(1) => {
-                                                    let mut temp = format!("{}", app.modbus_request_data.start_addr);
-                                                    temp.pop(); 
-
-                                                    if let Ok(value) = temp.parse::<u16>() {
-                                                        app.modbus_request_data.start_addr = value; 
-                                                    }
+                                                    app.modbus_request_data.start_addr = backspace_rm_u16(app.modbus_request_data.start_addr);
                                                 }
                                                 Some(2) => {
-                                                    let mut temp = format!("{}", app.modbus_request_data.quantity);
-                                                    temp.pop(); 
-
-                                                    if let Ok(value) = temp.parse::<u8>() {
-                                                        app.modbus_request_data.quantity = value; 
-                                                    }                                                    
-                                                }                                                
+                                                    app.modbus_request_data.quantity = backspace_rm_u8(app.modbus_request_data.quantity);
+                                                }
                                             _ => {}
                                            }
 
