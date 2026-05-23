@@ -46,8 +46,35 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
         }
     }
 
+    /// Write to values in item list u8
+    fn write_to_u8(input_value: Option<u8>, c: char ) -> Option<u8> {
+        let mut temp = String::new(); 
+        match input_value {
+            Some(value) => temp = format!("{}", value),
+            None => () 
+        }
+        temp.push(c);
+        if let Ok(value) = temp.parse::<u8>() {
+            return Some(value);
+        } else {
+            return None;
+        }
+    }
 
-
+    /// Write to values in item list u16
+    fn write_to_u16(input_value: Option<u16>, c: char ) -> Option<u16> {
+        let mut temp = String::new(); 
+        match input_value {
+            Some(value) => temp = format!("{}", value),
+            None => () 
+        }
+        temp.push(c);
+        if let Ok(value) = temp.parse::<u16>() {
+            return Some(value);
+        } else {
+            return None;
+        }
+    }
 
     if event::poll(Duration::from_millis(50))? {
         if let Event::Key(key) = event::read()? {
@@ -70,37 +97,13 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                                     let index_state = list_state.selected();
                                         match index_state {
                                             Some(0) => {
-                                                let mut temp = String::new();
-                                                match app.modbus_request_data.slave_id {
-                                                    Some(value) => temp = format!("{}", value),
-                                                    None => ()
-                                                }
-                                                temp.push(c); 
-                                                if let Ok(parsed_value) = temp.parse::<u8>() {
-                                                    app.modbus_request_data.slave_id = Some(parsed_value); 
-                                                }
+                                                app.modbus_request_data.slave_id = write_to_u8(app.modbus_request_data.slave_id, c);
                                             },
                                             Some(1) => {
-                                                let mut temp = String::new();
-                                                match app.modbus_request_data.start_addr {
-                                                    Some(value) => temp = format!("{}", value),
-                                                    None => ()
-                                                }
-                                                temp.push(c); 
-                                                if let Ok(value) = temp.parse::<u16>() {
-                                                    app.modbus_request_data.start_addr = Some(value); 
-                                                }
+                                                app.modbus_request_data.start_addr = write_to_u16(app.modbus_request_data.start_addr, c);
                                             },
                                             Some(2) => {
-                                                let mut temp = String::new();
-                                                match app.modbus_request_data.quantity {
-                                                    Some(value) => temp = format!("{}", value),
-                                                    None => ()
-                                                }
-                                                temp.push(c); 
-                                                if let Ok(value) = temp.parse::<u8>() {
-                                                    app.modbus_request_data.quantity = Some(value); 
-                                                }
+                                                app.modbus_request_data.quantity = write_to_u8(app.modbus_request_data.quantity, c);
                                             }
                                         _ => {}
                                     }
