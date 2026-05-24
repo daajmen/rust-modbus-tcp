@@ -15,7 +15,7 @@ return response;
 } 
 
 
-pub fn decode_response_bits(byte_count : usize, quantity : u16, stream_response: &[u8], start_addr : u16 ) -> BTreeMap<u16, u16> {
+pub fn decode_response_bits(byte_count : usize, quantity : u8, stream_response: &[u8], start_addr : u16 ) -> BTreeMap<u16, u16> {
 
     let mut response : BTreeMap<u16, u16> = BTreeMap::new();
     let mut counter: u16 = start_addr; 

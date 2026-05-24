@@ -6,6 +6,7 @@ use std::u8;
 use std::{net::TcpStream};
 
 use crate::modbus::modbus_response::{decode_response_bits, decode_response};
+use crate::ui::app::ModbusRequestData;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub enum ModbusFunction {
@@ -58,7 +59,7 @@ impl ModbusMaster {
 
 
     // Read modbus register
-    pub fn read_modbus_register(&mut self, modbus_function: ModbusFunction,unit_id: u8, start_addr: u16, quantity : u16 ) -> Result<BTreeMap<u16, u16>> {
+    pub fn read_modbus_register(&mut self, request_data: ModbusRequestData ) -> Result<BTreeMap<u16, u16>> {
 
         fn build_read_register(modbus_function : ModbusFunction, unit_id: u8, start_addr: u16, quantity: u16 ) -> Vec<u8> {
 
@@ -89,7 +90,7 @@ impl ModbusMaster {
             return request; 
         }
 
-        let mb_function = modbus_function.clone(); 
+        let mb_function = request_data.function.clone(); 
 
         
 
@@ -101,7 +102,23 @@ impl ModbusMaster {
 
         }; 
 
-        let modbus_request = build_read_register(modbus_function, unit_id, start_addr, quantity);
+        let Some(slave_id) = request_data.slave_id else {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Missing slave_id"));
+        };
+
+        let Some(start_addr) = request_data.start_addr else {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Missing start adress"));
+        };
+
+        let Some(quantity) = request_data.quantity else {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Missing quanity"));
+        };
+
+        let modbus_request = build_read_register(
+            request_data.function,
+            slave_id, 
+            start_addr, 
+            quantity as u16);
         stream.write(&modbus_request)?;
 
         let mut response = [0u8; 254]; 

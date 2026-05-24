@@ -1,5 +1,5 @@
 use color_eyre::{Result}; 
-use ratatui::{DefaultTerminal, Frame, style::{Color, Stylize}, text::Line, widgets::{Block, Borders, Clear, List, ListState, Paragraph}}; 
+use ratatui::{DefaultTerminal, Frame, style::{Color, Stylize}, text::Line, widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph}}; 
 use ratatui::layout::{Layout, Direction, Constraint, Rect};
 use ratatui::prelude::*; 
 use std::{ time::{Duration, Instant}, vec};
@@ -174,10 +174,20 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
             Constraint::Percentage(75)])
         .split(outer_layout[1]);     
     
-    //let mut items: Vec<ModbusRequestData> = Vec::new();
-    let mut items = [app.modbus_request_data.as_string()];
 
-    // Temporary 
+    if app.modbus_write_request {
+        app.modbus_requests.push(app.modbus_request_data.clone()); 
+        app.modbus_request_data.clear_data();
+        app.modbus_write_request = false; 
+    }
+
+    let items: Vec<ListItem> = app
+        .modbus_requests
+        .iter()
+        .map(|request| {
+            ListItem::new(request.as_string())
+        })
+        .collect();
 
     let list = List::new(items)
             .block(
@@ -299,23 +309,18 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
 
             // Connection failed
             app.connection_error = connection_ok.is_err();
-            
             }
+            let mut data = vec![]; 
             // Fetch data 
             if let Some(master) = master.as_mut() {
-                let data = [
-                    master.read_modbus_register(ModbusFunction::ReadCoilRegister, app.slave_id, start_adress, quantity),
-                    master.read_modbus_register(ModbusFunction::ReadInputStatusRegister,app.slave_id, start_adress,quantity),
-                    master.read_modbus_register(ModbusFunction::ReadInputRegister, app.slave_id, start_adress, quantity),
-                    master.read_modbus_register(ModbusFunction::ReadHoldingRegister,app.slave_id,start_adress,quantity),        
-                ];
+                for r in app.modbus_requests.iter() {
 
-            // Not my solution -.-     
-            if let [Ok(a), Ok(b), Ok(c), Ok(d)] = data {
-                handle_modbus_data(app, vec![a, b, c, d]);
-            } else {
-                handle_modbus_data(app, vec![]);
-            }
+                    if let Ok(response) = master.read_modbus_register(r.clone()) {
+                        data.push(response);
+                    } 
+                }                
+
+            handle_modbus_data(app, data);
             }
     
 

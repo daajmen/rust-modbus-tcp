@@ -10,6 +10,7 @@ pub struct AppState {
     pub connect_requested: bool,
     pub active_popup_field: PopupField,
     pub modbus_data: String,
+    pub modbus_requests: Vec<ModbusRequestData>,
     pub modbus_request_data: ModbusRequestData,
     pub modbus_write_request: bool, 
     pub poll_time: u16,
@@ -19,7 +20,7 @@ pub struct AppState {
     pub ui_state: UiStates,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ModbusRequestData {
     pub slave_id: Option<u8>,
     pub function: ModbusFunction, 
@@ -48,6 +49,12 @@ impl ModbusRequestData {
             }
         )
     }
+
+    pub fn clear_data(&mut self) {
+        self.slave_id = None; 
+        self.start_addr = None; 
+        self.quantity = None;  
+    }
     
 }
 
@@ -58,7 +65,7 @@ pub enum PopupField {
     Port,
     Poll,
 }
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub enum ModbusRequestPopupField {
     #[default]
     SlavId,
