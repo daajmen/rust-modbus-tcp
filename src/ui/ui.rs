@@ -4,13 +4,13 @@ use ratatui::layout::{Layout, Direction, Constraint, Rect};
 use ratatui::prelude::*; 
 use std::{ time::{Duration, Instant}, vec};
 
-use crate::ui::app::{AppState, ModbusRequestData, ModbusRequestPopupField, PopupField, UiStates, handle_modbus_data};
+use crate::ui::app::{AppState, PopupField, UiStates, handle_modbus_data};
 use crate::{modbus::modbus_client::{ModbusFunction, ModbusMaster}};
 use crate::ui::handler::handle_event;
 
 pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
 
-    fn render_register_popup(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
+    fn render_register_popup(frame: &mut Frame, list_state: &mut ListState) {
 
             let popup = Rect {
                 x: frame.area().width / 4, 
@@ -264,7 +264,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
             render_config_popup(frame, app);
         }
         UiStates::AddRegisters => {
-            render_register_popup(frame, app, list_state);
+            render_register_popup(frame, list_state);
         }
         UiStates::AddRegistersInput => {
             render_register_configure_popup(frame, app, list_state);
@@ -280,8 +280,6 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
     
 
     // TODO CLEAN 
-    let start_adress = 0;
-    let quantity = 6;     
     let mut last_poll = Instant::now(); 
     let mut list_state = ListState::default().with_selected(Some(0));
 

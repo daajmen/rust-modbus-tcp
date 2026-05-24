@@ -1,9 +1,9 @@
 use color_eyre::{Result}; 
 use crossterm::event::{self, Event, KeyEventKind};
 use ratatui::widgets::ListState; 
-use crate::ui::app::{AppState, ModbusRequestPopupField, PopupField, UiStates, handle_modbus_data};
-use crate::{modbus::modbus_client::{ModbusFunction, ModbusMaster}};
-use std::time::{Duration, Instant};
+use crate::ui::app::{AppState, PopupField, UiStates};
+use crate::{modbus::modbus_client::{ModbusFunction}};
+use std::time::{Duration};
 
 pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bool>{
     /// function to help with to remove the single value u8
@@ -48,32 +48,22 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
 
     /// Write to values in item list u8
     fn write_to_u8(input_value: Option<u8>, c: char ) -> Option<u8> {
-        let mut temp = String::new(); 
-        match input_value {
-            Some(value) => temp = format!("{}", value),
-            None => () 
-        }
+        let mut temp = match input_value {
+            Some(value) => value.to_string(),
+            None => String::new(),
+        };
         temp.push(c);
-        if let Ok(value) = temp.parse::<u8>() {
-            return Some(value);
-        } else {
-            return None;
-        }
+        temp.parse::<u8>().ok()
     }
 
     /// Write to values in item list u16
-    fn write_to_u16(input_value: Option<u16>, c: char ) -> Option<u16> {
-        let mut temp = String::new(); 
-        match input_value {
-            Some(value) => temp = format!("{}", value),
-            None => () 
-        }
+    fn write_to_u16(input_value: Option<u16>, c: char ) -> Option<u16> { 
+        let mut temp = match input_value {
+            Some(value) => value.to_string(),
+            None => String::new(), 
+        };
         temp.push(c);
-        if let Ok(value) = temp.parse::<u16>() {
-            return Some(value);
-        } else {
-            return None;
-        }
+        temp.parse::<u16>().ok()
     }
 
     if event::poll(Duration::from_millis(50))? {

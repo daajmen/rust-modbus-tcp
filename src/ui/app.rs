@@ -6,7 +6,6 @@ use crate::modbus::modbus_client::ModbusFunction;
 pub struct AppState {
     pub ip_adress: String, 
     pub port: String, 
-    pub slave_id: u8,
     pub connect_requested: bool,
     pub active_popup_field: PopupField,
     pub modbus_data: String,
@@ -26,8 +25,6 @@ pub struct ModbusRequestData {
     pub function: ModbusFunction, 
     pub start_addr: Option<u16>,
     pub quantity: Option<u8>,
-    pub input_field: ModbusRequestPopupField,
-    pub input_field_popup: bool,
 }
 
 impl ModbusRequestData {
@@ -64,13 +61,6 @@ pub enum PopupField {
     Ip,
     Port,
     Poll,
-}
-#[derive(Debug, Default, Clone)]
-pub enum ModbusRequestPopupField {
-    #[default]
-    SlavId,
-    StartRegister,
-    Quanity,
 }
 
 #[derive(Debug, Default)]
