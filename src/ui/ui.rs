@@ -2,9 +2,9 @@ use color_eyre::{Result};
 use ratatui::{DefaultTerminal, Frame, style::{Color, Stylize}, text::Line, widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph}}; 
 use ratatui::layout::{Layout, Direction, Constraint, Rect};
 use ratatui::prelude::*; 
-use std::{ time::{Duration, Instant}, vec};
+use std::time::{Duration, Instant};
 
-use crate::ui::app::{AppState, PopupField, UiStates, handle_modbus_data};
+use crate::ui::app::{AppState, UiStates, handle_modbus_data};
 use crate::{modbus::modbus_client::{ModbusFunction, ModbusMaster}};
 use crate::ui::handler::handle_event;
 
@@ -81,63 +81,37 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
         
     }    
 
-    fn render_config_popup(frame: &mut Frame, app: &mut AppState) {
+    fn render_connection_settings(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
+
         let popup = Rect {
-            x: frame.area().width / 4, 
-            y: frame.area().height / 4,
-            width: frame.area().width / 2, 
-            height: frame.area().height / 3,  
-        }; 
+                x: frame.area().width / 4, 
+                y: frame.area().height / 4,
+                width: frame.area().width / 2, 
+                height: frame.area().height / 3,  
+            }; 
 
-        frame.render_widget(
-            Clear,
-            popup,
-        );
-
-        let highlight_ip = match app.active_popup_field {
-            PopupField::Ip => Color::Green,
-            _ => Color::Yellow,            
-        };
-
-        let highlight_port = match app.active_popup_field {
-            PopupField::Port => Color::Green,
-            _ => Color::Yellow,
-        };
-
-        let highlight_poll = match app.active_popup_field {
-            PopupField::Poll => Color::Green,
-            _ => Color::Yellow,            
-        };
-
-        frame.render_widget(
-            Paragraph::new(vec![
-                Line::from(vec![
-                    "IP-Adress: ".into(),
-                    Span::styled(
-                        &app.ip_adress,
-                        Style::default().fg(highlight_ip))]),
-
-                Line::from(vec![    
-                    "Gateway port: ".into(),
-                    Span::styled(
-                        &app.port,
-                        Style::default().fg(highlight_port))]),
-
-                Line::from(vec![    
-                    "Polling time: ".into(),
-                    Span::styled(
-                        &app.poll_time_input.to_string(),
-                        Style::default().fg(highlight_poll))]),                        
-                    
-                ])
-                .block(Block::new().title("Connection settings ").borders(Borders::ALL ))
-                .style(Color::Yellow),
-            popup,
+            frame.render_widget(
+                Clear,
+                popup,
             );
 
-        
-    }        
+            let items = [
+                format!("IP-adress: {}", app.ip_adress),
+                format!("Port: {}", app.port),
+                match app.poll_time {
+                    Some(value) => format!("Modbus requests delay: {}ms", value),
+                    None =>  String::from("Modbus requests delay: ---ms")
+                }                  
+            ];
 
+            let list = List::new(items)
+                .style(Color::Yellow)
+                .highlight_style(Modifier::REVERSED)
+                .highlight_symbol("> ")
+                .block(Block::new().title(" Add modbus register ").borders(Borders::ALL)); 
+
+            frame.render_stateful_widget(list, popup, list_state);        
+    }
 
     let instructions = Line::from(vec![
         " Quit ".into(),
@@ -231,7 +205,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
         Line::from(vec![
             "Polling time: ".into(),
              Span::styled(
-                app.poll_time.clone().to_string(), 
+                format!("{}", app.poll_time.unwrap_or(0)), 
                 Style::default().fg(Color::Yellow)),
         ]),
         Line::from(vec![
@@ -263,7 +237,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
 
     match app.ui_state {
         UiStates::ConfGateway => {
-            render_config_popup(frame, app);
+            render_connection_settings(frame, app, list_state);
         }
         UiStates::AddRegisters => {
             render_register_popup(frame, list_state);
@@ -292,8 +266,12 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
 
     loop {
 
-        // Check request
-        if app.connect_requested && last_poll.elapsed() >= Duration::from_millis(app.poll_time as u64) {
+        let loop_time = match app.poll_time{
+            Some(value) => value as u64,
+            None => 1500 as u64
+        };
+
+        if app.connect_requested && last_poll.elapsed() >= Duration::from_millis(loop_time) {
             last_poll = Instant::now(); 
             // if connection has not been made
             if master.is_none() {

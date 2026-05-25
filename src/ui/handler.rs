@@ -1,7 +1,7 @@
 use color_eyre::{Result}; 
 use crossterm::event::{self, Event, KeyEventKind};
 use ratatui::widgets::ListState; 
-use crate::ui::app::{AppState, PopupField, UiStates};
+use crate::ui::app::{AppState, UiStates};
 use crate::{modbus::modbus_client::{ModbusFunction}};
 use std::time::{Duration};
 
@@ -77,10 +77,18 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                         event::KeyCode::Char(c) => {
                             match app.ui_state {
                                 UiStates::ConfGateway => {
-                                    match app.active_popup_field {
-                                        PopupField::Ip => app.ip_adress.push(c),
-                                        PopupField::Port => app.port.push(c),
-                                        PopupField::Poll => app.poll_time_input.push(c),
+                                    let index_state = list_state.selected();
+                                    match index_state {
+                                        Some(0) => {
+                                            app.ip_adress.push(c);
+                                        }
+                                        Some(1) => {
+                                            app.port.push(c);
+                                        }
+                                        Some(2) => {
+                                            app.poll_time = write_to_u16(app.poll_time, c)
+                                        }
+                                    _ => {}    
                                     }
                                 }
                                 UiStates::AddRegistersInput => {
@@ -107,9 +115,6 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                             match app.ui_state {
                                 UiStates::ConfGateway => {
                                     app.ui_state = UiStates::Home;
-                                    if let Ok(value) = app.poll_time_input.parse::<u16>() {
-                                        app.poll_time = value;
-                                    }
                                 },
                                 UiStates::AddRegisters => {
                                     app.ui_state = UiStates::Home; 
@@ -124,11 +129,6 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                         event::KeyCode::Tab => {
                             match app.ui_state {
                                 UiStates::ConfGateway => {
-                                    app.active_popup_field = match app.active_popup_field {
-                                        PopupField::Ip => PopupField::Port,
-                                        PopupField::Port => PopupField::Poll,
-                                        PopupField::Poll => PopupField::Ip,
-                                        }
                                 }
                             _ => {}
                             }
@@ -137,31 +137,33 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                         event::KeyCode::Backspace => {
                             match app.ui_state {
                                 UiStates::ConfGateway => {
-                                    match app.active_popup_field {
-                                        PopupField::Ip => { app.ip_adress.pop(); }
-                                        PopupField::Port => { app.port.pop(); }
-                                        PopupField::Poll => { 
-                                            app.poll_time_input.pop();
-                                            
-                                            if let Ok(value) = app.poll_time_input.parse::<u16>() {
-                                                app.poll_time = value;
-                                            }
-                                        
+                                    let index_state = list_state.selected();
+                                    match index_state {
+                                        Some(0) => {
+                                            app.ip_adress.pop();
                                         }
+                                        Some(1) => {
+                                            app.port.pop(); 
+                                        }
+                                        Some(2) => {
+                                            app.poll_time = backspace_rm_u16(app.poll_time);
+                                        }
+                                        _ => {}
                                     }
-                                }
+                                } 
+
                                 UiStates::AddRegistersInput => {
                                     let index_state = list_state.selected();
-                                        match index_state {
-                                            Some(0) => {
-                                                app.modbus_request_data.slave_id = backspace_rm_u8(app.modbus_request_data.slave_id);
-                                            } 
-                                            Some(1) => {
-                                                app.modbus_request_data.start_addr = backspace_rm_u16(app.modbus_request_data.start_addr);
-                                            }
-                                            Some(2) => {
-                                                app.modbus_request_data.quantity = backspace_rm_u8(app.modbus_request_data.quantity);
-                                            }
+                                    match index_state {
+                                        Some(0) => {
+                                            app.modbus_request_data.slave_id = backspace_rm_u8(app.modbus_request_data.slave_id);
+                                        } 
+                                        Some(1) => {
+                                            app.modbus_request_data.start_addr = backspace_rm_u16(app.modbus_request_data.start_addr);
+                                        }
+                                        Some(2) => {
+                                            app.modbus_request_data.quantity = backspace_rm_u8(app.modbus_request_data.quantity);
+                                        }
                                         _ => {}
                                     }
                                     
@@ -172,7 +174,9 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                         // Down 
                         event::KeyCode::Down => {
                             match app.ui_state {
-                                UiStates::AddRegisters | UiStates::AddRegistersInput => {
+                                UiStates::AddRegisters | 
+                                UiStates::AddRegistersInput |
+                                UiStates::ConfGateway => {
                                     list_state.select_next();
                                 },
                             _ => {}
@@ -182,7 +186,9 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                         // Up
                         event::KeyCode::Up => {
                             match app.ui_state {
-                                UiStates::AddRegisters | UiStates::AddRegistersInput => {
+                                UiStates::AddRegisters |
+                                UiStates::AddRegistersInput |
+                                UiStates::ConfGateway => {
                                     list_state.select_previous();
                                 },
                             _ => {}
@@ -222,6 +228,7 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                                         app.ui_state = UiStates::AddRegisters; 
                                     }
                                 }
+                                UiStates::ConfGateway => app.ui_state = UiStates::Home,
                             _ => {}
                             }
                             

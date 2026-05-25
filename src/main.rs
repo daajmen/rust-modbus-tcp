@@ -1,5 +1,5 @@
 use color_eyre::{Result};  
-use crate::ui::app::{AppState, PopupField, UiStates};
+use crate::ui::app::{AppState, UiStates};
 use crate::modbus::modbus_client::{ModbusFunction};
 use ui::ui::run; 
 
@@ -12,13 +12,11 @@ fn main() -> Result<()> {
         ip_adress: "127.0.0.1".to_string(),
         port: "502".to_string(), 
         connect_requested: false, 
-        active_popup_field: PopupField::Ip,
         modbus_data: "".to_string(),
         modbus_requests: vec![],
         modbus_request_data: ui::app::ModbusRequestData { slave_id: None, function: ModbusFunction::ReadCoilRegister, start_addr: None, quantity: None}, 
         modbus_write_request: false, 
-        poll_time: 1500,
-        poll_time_input: "1500".to_string(), 
+        poll_time: Some(1500),
         counter: 0,
         connection_error: false,
         ui_state: UiStates::Home, 

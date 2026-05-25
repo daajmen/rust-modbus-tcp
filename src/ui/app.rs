@@ -7,13 +7,11 @@ pub struct AppState {
     pub ip_adress: String, 
     pub port: String, 
     pub connect_requested: bool,
-    pub active_popup_field: PopupField,
     pub modbus_data: String,
     pub modbus_requests: Vec<ModbusRequestData>,
     pub modbus_request_data: ModbusRequestData,
     pub modbus_write_request: bool, 
-    pub poll_time: u16,
-    pub poll_time_input: String,
+    pub poll_time: Option<u16>,
     pub counter: u16,
     pub connection_error: bool, 
     pub ui_state: UiStates,
@@ -56,14 +54,6 @@ impl ModbusRequestData {
 }
 
 #[derive(Debug, Default)]
-pub enum PopupField {
-    #[default]
-    Ip,
-    Port,
-    Poll,
-}
-
-#[derive(Debug, Default)]
 pub enum UiStates {
     #[default]
     Home,
@@ -71,8 +61,6 @@ pub enum UiStates {
     AddRegisters,
     AddRegistersInput,
 }
-
-
 
 pub fn handle_modbus_data(app: &mut AppState, data: Vec<BTreeMap<u16,u16>>) {
 
