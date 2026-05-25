@@ -32,7 +32,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
             ];
 
             let list = List::new(items)
-                .style(Color::LightMagenta)
+                .style(Color::Yellow)
                 .highlight_style(Modifier::REVERSED)
                 .highlight_symbol("> ")
                 .block(Block::new().title(" Add modbus register ").borders(Borders::ALL)); 
@@ -71,7 +71,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
             ];
 
             let list = List::new(items)
-                .style(Color::LightMagenta)
+                .style(Color::Yellow)
                 .highlight_style(Modifier::REVERSED)
                 .highlight_symbol("> ")
                 .block(Block::new().title(" Add modbus register ").borders(Borders::ALL)); 
@@ -131,7 +131,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
                     
                 ])
                 .block(Block::new().title("Connection settings ").borders(Borders::ALL ))
-                .style(Color::LightMagenta),
+                .style(Color::Yellow),
             popup,
             );
 
@@ -196,7 +196,8 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
                 .bold()
                 .fg(Color::Blue)
                 .borders(Borders::ALL)
-            );
+            )
+            .style(Color::Yellow);
     frame.render_widget(list, outer_layout[0]);
  
     let connection_status: &str;
@@ -254,7 +255,8 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
     );    
     frame.render_widget(
         Paragraph::new(app.modbus_data.clone())
-        .block(Block::new().bold().fg(Color::Green).borders(Borders::ALL)),
+        .style(Color::Yellow)
+        .block(Block::new().bold().fg(Color::Blue).borders(Borders::ALL)),
         inner_layout[1],
     );
 
