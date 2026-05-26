@@ -10,7 +10,7 @@ use ratatui::{
 use std::time::{Duration, Instant};
 
 use crate::modbus::modbus_client::{ModbusFunction, ModbusMaster};
-use crate::ui::app::{AppState, UiStates, handle_modbus_data};
+use crate::ui::app::{AppState, ConnectionStatus, UiStates, handle_modbus_data};
 use crate::ui::handler::handle_event;
 
 pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
@@ -179,15 +179,19 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
     let connection_status: &str;
     let connection_color: Color;
 
-    if app.connect_requested && !app.connection_error {
-        connection_status = "CONNECTED";
-        connection_color = Color::Green;
-    } else if app.connection_error {
-        connection_status = "CONNECTION FAILED!!";
-        connection_color = Color::Red;
-    } else {
-        connection_status = "DISCONNECTED";
-        connection_color = Color::Red;
+    match app.connection_status {
+        ConnectionStatus::Disconnected => {
+            connection_status = "DISCONNECTED";
+            connection_color = Color::Red;
+        }
+        ConnectionStatus::Connected => {
+            connection_status = "CONNECTED";
+            connection_color = Color::Green;
+        }
+        ConnectionStatus::ConnectionErrorTimeOut => {
+            connection_status = "CONNECTION FAILED!!";
+            connection_color = Color::Red;
+        }
     }
 
     let data_box = Text::from(vec![
@@ -256,6 +260,8 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
     let mut master: Option<ModbusMaster> = None;
 
     loop {
+        app.update_state();
+
         let loop_time = match app.connection_settings.poll_time {
             Some(value) => value as u64,
             None => 1500 as u64,

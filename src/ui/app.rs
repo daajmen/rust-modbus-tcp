@@ -2,6 +2,23 @@ use crate::modbus::modbus_client::ModbusFunction;
 use std::collections::BTreeMap;
 
 #[derive(Debug, Default)]
+pub enum UiStates {
+    #[default]
+    Home,
+    ConfGateway,
+    AddRegisters,
+    AddRegistersInput,
+}
+
+#[derive(Debug, Default)]
+pub enum ConnectionStatus {
+    #[default]
+    Disconnected,
+    Connected,
+    ConnectionErrorTimeOut,
+}
+
+#[derive(Debug, Default)]
 pub struct AppState {
     pub connection_settings: ConnectionSettingsData,
     pub connect_requested: bool,
@@ -15,12 +32,16 @@ pub struct AppState {
     pub ui_state: UiStates,
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct ModbusRequestData {
-    pub slave_id: Option<u8>,
-    pub function: ModbusFunction,
-    pub start_addr: Option<u16>,
-    pub quantity: Option<u8>,
+impl AppState {
+    pub fn update_state(&mut self) {
+        if self.connect_requested && !self.connection_error {
+            self.connection_status = ConnectionStatus::Connected;
+        } else if self.connection_error {
+            self.connection_status = ConnectionStatus::ConnectionErrorTimeOut;
+        } else {
+            self.connection_status = ConnectionStatus::Disconnected;
+        }
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -28,6 +49,14 @@ pub struct ConnectionSettingsData {
     pub ip_adress: String,
     pub port: String,
     pub poll_time: Option<u16>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct ModbusRequestData {
+    pub slave_id: Option<u8>,
+    pub function: ModbusFunction,
+    pub start_addr: Option<u16>,
+    pub quantity: Option<u8>,
 }
 
 impl ModbusRequestData {
@@ -55,23 +84,6 @@ impl ModbusRequestData {
         self.start_addr = None;
         self.quantity = None;
     }
-}
-
-#[derive(Debug, Default)]
-pub enum UiStates {
-    #[default]
-    Home,
-    ConfGateway,
-    AddRegisters,
-    AddRegistersInput,
-}
-
-#[derive(Debug, Default)]
-pub enum ConnectionStatus {
-    #[default]
-    Disconnected,
-    Connected,
-    ConnectionErrorTimeOut,
 }
 
 pub fn handle_modbus_data(app: &mut AppState, data: Vec<BTreeMap<u16, u16>>) {
