@@ -8,46 +8,33 @@ use std::time::{Duration};
 pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bool>{
     /// function to help with to remove the single value u8
     fn backspace_rm_u8(input_value: Option<u8> ) -> Option<u8> {
-        let mut temp = String::new(); 
-        match input_value {
-            Some(value) => {
-                if value < 10 {
-                    return None; 
-                }
-                temp = format!("{}", value);
-                temp.pop(); 
-                if let Ok(value) = temp.parse::<u8>() {
-                    return Some(value); 
-                } else {
-                    return None;
-                }                   
+        input_value.and_then(|value| {
+            let new_value = value / 10; 
+
+            if new_value == 0 {
+                None
+            } else {
+                Some(new_value)
             }
-        _ => {None}
-        }
+        })
     }
 
     /// function to help with to remove the single value u16
     fn backspace_rm_u16(input_value: Option<u16> ) -> Option<u16> {
-        let mut temp = String::new(); 
-        match input_value {
-            Some(value) => {
-                if value < 10 {
-                    return None; 
-                }
-                temp = format!("{}", value);
-                temp.pop(); 
-                if let Ok(value) = temp.parse::<u16>() {
-                    return Some(value); 
-                } else {
-                    return None;
-                }                   
+        input_value.and_then(|value| {
+            let new_value = value / 10; 
+
+            if new_value == 0 {
+                None
+            } else {
+                Some(new_value)
             }
-        _ => {None}
-        }
+        })
     }
 
+
     /// Write to values in item list u8
-    fn write_to_u8(input_value: Option<u8>, c: char ) -> Option<u8> {
+    fn write_to_u8(input_value: Option<u8>, c: char ) -> Option<u8> {        
         let mut temp = match input_value {
             Some(value) => value.to_string(),
             None => String::new(),
