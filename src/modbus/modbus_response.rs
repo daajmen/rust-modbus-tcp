@@ -1,35 +1,37 @@
 use std::collections::BTreeMap;
 
-pub fn decode_response(byte_count : usize, stream_response: &[u8], start_addr : u16 ) -> BTreeMap<u16, u16> {
+pub fn decode_response(
+    byte_count: usize,
+    stream_response: &[u8],
+    start_addr: u16,
+) -> BTreeMap<u16, u16> {
+    let mut response: BTreeMap<u16, u16> = BTreeMap::new();
+    let mut counter: u16 = start_addr;
 
-    let mut response : BTreeMap<u16, u16> = BTreeMap::new();
-    let mut counter: u16 = start_addr; 
-
-    for i in (9..byte_count).step_by(2){
-        let var = u16::from_be_bytes([stream_response[i], stream_response[i+1]]);
-        response.insert(counter, var); 
-        counter = counter +1;         
+    for i in (9..byte_count).step_by(2) {
+        let var = u16::from_be_bytes([stream_response[i], stream_response[i + 1]]);
+        response.insert(counter, var);
+        counter = counter + 1;
     }
 
-return response; 
-} 
+    return response;
+}
 
-
-pub fn decode_response_bits(byte_count : usize, quantity : u8, stream_response: &[u8], start_addr : u16 ) -> BTreeMap<u16, u16> {
-
-    let mut response : BTreeMap<u16, u16> = BTreeMap::new();
-    let mut counter: u16 = start_addr; 
+pub fn decode_response_bits(
+    byte_count: usize,
+    quantity: u8,
+    stream_response: &[u8],
+    start_addr: u16,
+) -> BTreeMap<u16, u16> {
+    let mut response: BTreeMap<u16, u16> = BTreeMap::new();
+    let mut counter: u16 = start_addr;
     for _i in 9..byte_count {
-        
         for i in 0..quantity {
-            let bit = (stream_response[9] >> i ) & 1; 
+            let bit = (stream_response[9] >> i) & 1;
             response.insert(counter, bit as u16);
-            counter = counter +1; 
-
+            counter = counter + 1;
         }
-
     }
 
-return response;
-
+    return response;
 }

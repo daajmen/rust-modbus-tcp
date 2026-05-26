@@ -1,28 +1,33 @@
+use crate::modbus::modbus_client::ModbusFunction;
 use std::collections::BTreeMap;
-use crate::modbus::modbus_client::ModbusFunction; 
-
 
 #[derive(Debug, Default)]
 pub struct AppState {
-    pub ip_adress: String, 
-    pub port: String, 
+    pub connection_settings: ConnectionSettingsData,
     pub connect_requested: bool,
+    pub connection_error: bool,
+    pub connection_status: ConnectionStatus,
     pub modbus_data: String,
     pub modbus_requests: Vec<ModbusRequestData>,
     pub modbus_request_data: ModbusRequestData,
-    pub modbus_write_request: bool, 
-    pub poll_time: Option<u16>,
+    pub modbus_write_request: bool,
     pub counter: u16,
-    pub connection_error: bool, 
     pub ui_state: UiStates,
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct ModbusRequestData {
     pub slave_id: Option<u8>,
-    pub function: ModbusFunction, 
+    pub function: ModbusFunction,
     pub start_addr: Option<u16>,
     pub quantity: Option<u8>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct ConnectionSettingsData {
+    pub ip_adress: String,
+    pub port: String,
+    pub poll_time: Option<u16>,
 }
 
 impl ModbusRequestData {
@@ -46,11 +51,10 @@ impl ModbusRequestData {
     }
 
     pub fn clear_data(&mut self) {
-        self.slave_id = None; 
-        self.start_addr = None; 
-        self.quantity = None;  
+        self.slave_id = None;
+        self.start_addr = None;
+        self.quantity = None;
     }
-    
 }
 
 #[derive(Debug, Default)]
@@ -62,14 +66,20 @@ pub enum UiStates {
     AddRegistersInput,
 }
 
-pub fn handle_modbus_data(app: &mut AppState, data: Vec<BTreeMap<u16,u16>>) {
+#[derive(Debug, Default)]
+pub enum ConnectionStatus {
+    #[default]
+    Disconnected,
+    Connected,
+    ConnectionErrorTimeOut,
+}
 
-    app.modbus_data.clear(); 
-    app.counter = app.counter + 1; 
+pub fn handle_modbus_data(app: &mut AppState, data: Vec<BTreeMap<u16, u16>>) {
+    app.modbus_data.clear();
+    app.counter = app.counter + 1;
 
     for x in data {
         app.modbus_data.push_str(&format!("{:?}", x));
         app.modbus_data.push_str("\n");
-    }  
-        
     }
+}
