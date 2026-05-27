@@ -1,6 +1,7 @@
-use crate::modbus::types::ModbusRequestData;
+use crate::modbus::types::{ModbusFunction, ModbusRequestData};
 use std::collections::BTreeMap;
 
+/// States for tui element
 #[derive(Debug, Default)]
 pub enum UiStates {
     #[default]
@@ -10,6 +11,7 @@ pub enum UiStates {
     AddRegistersInput,
 }
 
+/// States for connection status
 #[derive(Debug, Default)]
 pub enum ConnectionStatus {
     #[default]
@@ -18,6 +20,7 @@ pub enum ConnectionStatus {
     ConnectionErrorTimeOut,
 }
 
+/// States to handle connection logic
 #[derive(Debug, Default)]
 pub struct AppState {
     pub connection_settings: ConnectionSettingsData,
@@ -33,6 +36,29 @@ pub struct AppState {
 }
 
 impl AppState {
+    pub fn new() -> Self {
+        Self {
+            connection_settings: ConnectionSettingsData {
+                ip_adress: "127.0.0.1".to_string(),
+                port: 502.to_string(),
+                poll_time: Some(1500),
+            },
+            connect_requested: false,
+            connection_status: ConnectionStatus::Disconnected,
+            modbus_data: "".to_string(),
+            modbus_requests: vec![],
+            modbus_request_data: ModbusRequestData {
+                slave_id: None,
+                function: ModbusFunction::ReadCoilRegister,
+                start_addr: None,
+                quantity: None,
+            },
+            modbus_write_request: false,
+            counter: 0,
+            connection_error: false,
+            ui_state: UiStates::Home,
+        }
+    }
     pub fn update_state(&mut self) {
         if self.connect_requested && !self.connection_error {
             self.connection_status = ConnectionStatus::Connected;
@@ -50,7 +76,7 @@ pub struct ConnectionSettingsData {
     pub port: String,
     pub poll_time: Option<u16>,
 }
-
+/// Format modbus data to string
 pub fn handle_modbus_data(app: &mut AppState, data: Vec<BTreeMap<u16, u16>>) {
     app.modbus_data.clear();
     app.counter = app.counter + 1;
