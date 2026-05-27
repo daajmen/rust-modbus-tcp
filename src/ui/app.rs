@@ -1,4 +1,4 @@
-use crate::modbus::modbus_client::ModbusFunction;
+use crate::modbus::types::ModbusRequestData;
 use std::collections::BTreeMap;
 
 #[derive(Debug, Default)]
@@ -49,41 +49,6 @@ pub struct ConnectionSettingsData {
     pub ip_adress: String,
     pub port: String,
     pub poll_time: Option<u16>,
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct ModbusRequestData {
-    pub slave_id: Option<u8>,
-    pub function: ModbusFunction,
-    pub start_addr: Option<u16>,
-    pub quantity: Option<u8>,
-}
-
-impl ModbusRequestData {
-    pub fn as_string(&self) -> String {
-        format!(
-            "id: {}\n{:?}\nStartReg: {}\nQuanity: {} \n---------",
-            match self.slave_id {
-                Some(v) => v.to_string(),
-                None => "-".to_string(),
-            },
-            self.function,
-            match self.start_addr {
-                Some(v) => v.to_string(),
-                None => "-".to_string(),
-            },
-            match self.quantity {
-                Some(v) => v.to_string(),
-                None => "-".to_string(),
-            }
-        )
-    }
-
-    pub fn clear_data(&mut self) {
-        self.slave_id = None;
-        self.start_addr = None;
-        self.quantity = None;
-    }
 }
 
 pub fn handle_modbus_data(app: &mut AppState, data: Vec<BTreeMap<u16, u16>>) {

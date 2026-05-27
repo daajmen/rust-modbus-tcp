@@ -1,4 +1,4 @@
-use crate::modbus::modbus_client::ModbusFunction;
+use crate::modbus::types::ModbusFunction;
 use crate::ui::app::{AppState, UiStates};
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyEventKind};

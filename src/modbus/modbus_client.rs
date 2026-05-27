@@ -6,31 +6,12 @@ use std::net::TcpStream;
 use std::u8;
 
 use crate::modbus::modbus_response::{decode_response, decode_response_bits};
-use crate::ui::app::ModbusRequestData;
+use crate::modbus::types::{ModbusFunction, ModbusRequestData};
 
-#[derive(Clone, Copy, Debug, Default)]
-pub enum ModbusFunction {
-    #[default]
-    ReadCoilRegister = 1,
-    ReadInputStatusRegister = 2,
-    ReadInputRegister = 4,
-    ReadHoldingRegister = 3,
-}
 pub struct ModbusMaster {
     addr: String,
     port: String,
     pub stream: Option<TcpStream>,
-}
-
-impl ModbusFunction {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            ModbusFunction::ReadCoilRegister => "ReadCoilRegister",
-            ModbusFunction::ReadInputStatusRegister => "ReadInputStatusRegister",
-            ModbusFunction::ReadInputRegister => "ReadInputRegister",
-            ModbusFunction::ReadHoldingRegister => "ReadHoldingRegister",
-        }
-    }
 }
 
 impl ModbusMaster {

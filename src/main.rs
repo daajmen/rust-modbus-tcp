@@ -1,9 +1,10 @@
-use crate::modbus::modbus_client::ModbusFunction;
+use crate::modbus::types::{ModbusFunction, ModbusRequestData};
+use crate::runtime::run::run;
 use crate::ui::app::{AppState, ConnectionSettingsData, ConnectionStatus, UiStates};
 use color_eyre::Result;
-use ui::ui::run;
 
 mod modbus;
+mod runtime;
 mod ui;
 
 fn main() -> Result<()> {
@@ -18,7 +19,7 @@ fn main() -> Result<()> {
         connection_status: ConnectionStatus::Disconnected,
         modbus_data: "".to_string(),
         modbus_requests: vec![],
-        modbus_request_data: ui::app::ModbusRequestData {
+        modbus_request_data: ModbusRequestData {
             slave_id: None,
             function: ModbusFunction::ReadCoilRegister,
             start_addr: None,
