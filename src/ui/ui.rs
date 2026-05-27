@@ -10,7 +10,7 @@ use ratatui::{
 use crate::modbus::types::ModbusFunction;
 use crate::ui::app::{AppState, ConnectionStatus, UiStates};
 
-pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState) {
+pub fn render(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
     fn render_register_popup(frame: &mut Frame, list_state: &mut ListState) {
         let popup = Rect {
             x: frame.area().width / 4,
@@ -43,7 +43,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
 
     fn render_register_configure_popup(
         frame: &mut Frame,
-        app: &mut AppState,
+        app: &AppState,
         list_state: &mut ListState,
     ) {
         let popup = Rect {
@@ -83,11 +83,7 @@ pub fn render(frame: &mut Frame, app: &mut AppState, list_state: &mut ListState)
         frame.render_stateful_widget(list, popup, list_state);
     }
 
-    fn render_connection_settings(
-        frame: &mut Frame,
-        app: &mut AppState,
-        list_state: &mut ListState,
-    ) {
+    fn render_connection_settings(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
         let popup = Rect {
             x: frame.area().width / 4,
             y: frame.area().height / 4,
