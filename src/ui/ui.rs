@@ -10,111 +10,114 @@ use ratatui::{
 use crate::modbus::types::ModbusFunction;
 use crate::ui::app::{AppState, ConnectionStatus, UiStates};
 
+/// Creats a centered popup windows Rect
+fn centered_rect(frame: &mut Frame) -> Rect {
+    let popup = Rect {
+        x: frame.area().width / 4,
+        y: frame.area().height / 4,
+        width: frame.area().width / 2,
+        height: frame.area().height / 3,
+    };
+    return popup;
+}
+
+/// Builds window that contains the list function
+fn list_window<'a>(title: &'a str, items: Vec<String>) -> List<'a> {
+    let list = List::new(items)
+        .style(Color::Yellow)
+        .highlight_style(Modifier::REVERSED)
+        .highlight_symbol("> ")
+        .block(Block::new().title(title).borders(Borders::ALL));
+    return list;
+}
+
+//fn line_helper<'a>(spans: Vec<Span<'a>>) -> Line<'a> {
+
+//        Line::from(vec![
+//    "IP-adress: ".into(),
+//    Span::styled(
+//        app.connection_settings.ip_adress.clone(),
+//        Style::default().fg(Color::Yellow),
+//    ),
+//]),
+//
+//
+//
+
+//}
+
+/// Render add modbus register popup
+fn render_register_popup(frame: &mut Frame, list_state: &mut ListState) {
+    let popup = centered_rect(frame);
+
+    frame.render_widget(Clear, popup);
+
+    let items = [
+        ModbusFunction::ReadCoilRegister.as_str().to_string(),
+        ModbusFunction::ReadInputStatusRegister.as_str().to_string(),
+        ModbusFunction::ReadInputRegister.as_str().to_string(),
+        ModbusFunction::ReadHoldingRegister.as_str().to_string(),
+    ];
+
+    frame.render_stateful_widget(
+        list_window("Add modbus register", items.to_vec()),
+        popup,
+        list_state,
+    );
+}
+
+/// Render popup for configuration of the added modbus register
+fn render_register_configure_popup(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
+    let popup = centered_rect(frame);
+
+    frame.render_widget(Clear, popup);
+
+    let items = [
+        match app.modbus_request_data.slave_id {
+            Some(value) => format!("Slave id: {}", value),
+            None => format!("Slave id: None",),
+        },
+        match app.modbus_request_data.start_addr {
+            Some(value) => format!("Start register: {}", value),
+            None => format!("Start register: None",),
+        },
+        match app.modbus_request_data.quantity {
+            Some(value) => format!("Quantity: {}", value),
+            None => format!("Quantity: None",),
+        },
+    ];
+
+    frame.render_stateful_widget(
+        list_window("Add modbus register", items.to_vec()),
+        popup,
+        list_state,
+    );
+}
+
+/// Popup configure connection settings to gateway
+fn render_connection_settings(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
+    let popup = centered_rect(frame);
+
+    frame.render_widget(Clear, popup);
+
+    let items = [
+        format!("IP-adress: {}", app.connection_settings.ip_adress),
+        format!("Port: {}", app.connection_settings.port),
+        match app.connection_settings.poll_time {
+            Some(value) => format!("Modbus requests delay: {}ms", value),
+            None => String::from("Modbus requests delay: ---ms"),
+        },
+    ];
+
+    frame.render_stateful_widget(
+        list_window("Gateway connection settings", items.to_vec()),
+        popup,
+        list_state,
+    );
+}
+
+/// Main render function
 pub fn render(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
-    fn render_register_popup(frame: &mut Frame, list_state: &mut ListState) {
-        let popup = Rect {
-            x: frame.area().width / 4,
-            y: frame.area().height / 4,
-            width: frame.area().width / 2,
-            height: frame.area().height / 3,
-        };
-
-        frame.render_widget(Clear, popup);
-
-        let items = [
-            ModbusFunction::ReadCoilRegister.as_str(),
-            ModbusFunction::ReadInputStatusRegister.as_str(),
-            ModbusFunction::ReadInputRegister.as_str(),
-            ModbusFunction::ReadHoldingRegister.as_str(),
-        ];
-
-        let list = List::new(items)
-            .style(Color::Yellow)
-            .highlight_style(Modifier::REVERSED)
-            .highlight_symbol("> ")
-            .block(
-                Block::new()
-                    .title(" Add modbus register ")
-                    .borders(Borders::ALL),
-            );
-
-        frame.render_stateful_widget(list, popup, list_state);
-    }
-
-    fn render_register_configure_popup(
-        frame: &mut Frame,
-        app: &AppState,
-        list_state: &mut ListState,
-    ) {
-        let popup = Rect {
-            x: frame.area().width / 4,
-            y: frame.area().height / 4,
-            width: frame.area().width / 2,
-            height: frame.area().height / 3,
-        };
-
-        frame.render_widget(Clear, popup);
-
-        let items = [
-            match app.modbus_request_data.slave_id {
-                Some(value) => format!("Slave id: {}", value),
-                None => format!("Slave id: None",),
-            },
-            match app.modbus_request_data.start_addr {
-                Some(value) => format!("Start register: {}", value),
-                None => format!("Start register: None",),
-            },
-            match app.modbus_request_data.quantity {
-                Some(value) => format!("Quantity: {}", value),
-                None => format!("Quantity: None",),
-            },
-        ];
-
-        let list = List::new(items)
-            .style(Color::Yellow)
-            .highlight_style(Modifier::REVERSED)
-            .highlight_symbol("> ")
-            .block(
-                Block::new()
-                    .title(" Add modbus register ")
-                    .borders(Borders::ALL),
-            );
-
-        frame.render_stateful_widget(list, popup, list_state);
-    }
-
-    fn render_connection_settings(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
-        let popup = Rect {
-            x: frame.area().width / 4,
-            y: frame.area().height / 4,
-            width: frame.area().width / 2,
-            height: frame.area().height / 3,
-        };
-
-        frame.render_widget(Clear, popup);
-
-        let items = [
-            format!("IP-adress: {}", app.connection_settings.ip_adress),
-            format!("Port: {}", app.connection_settings.port),
-            match app.connection_settings.poll_time {
-                Some(value) => format!("Modbus requests delay: {}ms", value),
-                None => String::from("Modbus requests delay: ---ms"),
-            },
-        ];
-
-        let list = List::new(items)
-            .style(Color::Yellow)
-            .highlight_style(Modifier::REVERSED)
-            .highlight_symbol("> ")
-            .block(
-                Block::new()
-                    .title(" Add modbus register ")
-                    .borders(Borders::ALL),
-            );
-
-        frame.render_stateful_widget(list, popup, list_state);
-    }
-
     let instructions = Line::from(vec![
         " Quit ".into(),
         "<q> ".blue().bold(),
