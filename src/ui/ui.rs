@@ -31,20 +31,12 @@ fn list_window<'a>(title: &'a str, items: Vec<String>) -> List<'a> {
     return list;
 }
 
-//fn line_helper<'a>(spans: Vec<Span<'a>>) -> Line<'a> {
-
-//        Line::from(vec![
-//    "IP-adress: ".into(),
-//    Span::styled(
-//        app.connection_settings.ip_adress.clone(),
-//        Style::default().fg(Color::Yellow),
-//    ),
-//]),
-//
-//
-//
-
-//}
+fn line_helper(text: impl Into<String>, value: impl Into<String>, color: Color) -> Line<'static> {
+    Line::from(vec![
+        text.into().into(),
+        Span::styled(value.into(), Style::default().fg(color)),
+    ])
+}
 
 /// Render add modbus register popup
 fn render_register_popup(frame: &mut Frame, list_state: &mut ListState) {
@@ -168,6 +160,7 @@ pub fn render(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
 
     let connection_status: &str;
     let connection_color: Color;
+    let standard_color = Color::Yellow;
 
     match app.connection_status {
         ConnectionStatus::Disconnected => {
@@ -185,35 +178,23 @@ pub fn render(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
     }
 
     let data_box = Text::from(vec![
-        Line::from(vec![
-            "IP-adress: ".into(),
-            Span::styled(
-                app.connection_settings.ip_adress.clone(),
-                Style::default().fg(Color::Yellow),
-            ),
-        ]),
-        Line::from(vec![
-            "Port: ".into(),
-            Span::styled(
-                app.connection_settings.port.clone(),
-                Style::default().fg(Color::Yellow),
-            ),
-        ]),
-        Line::from(vec![
-            "Polling time: ".into(),
-            Span::styled(
-                format!("{}", app.connection_settings.poll_time.unwrap_or(0)),
-                Style::default().fg(Color::Yellow),
-            ),
-        ]),
-        Line::from(vec![
-            "Poll counter: ".into(),
-            Span::styled(app.counter.to_string(), Style::default().fg(Color::Yellow)),
-        ]),
-        Line::from(vec![
-            "Connection stats: ".into(),
-            Span::styled(connection_status, Style::default().fg(connection_color)),
-        ]),
+        line_helper(
+            "IP-adress: ",
+            app.connection_settings.ip_adress.clone(),
+            standard_color,
+        ),
+        line_helper(
+            "Port: ",
+            app.connection_settings.port.clone(),
+            standard_color,
+        ),
+        line_helper(
+            "Polling time: ",
+            format!("{}", app.connection_settings.poll_time.unwrap_or(0)),
+            standard_color,
+        ),
+        line_helper("Poll counter: ", app.counter.to_string(), standard_color),
+        line_helper("Connection stats: ", connection_status, connection_color),
     ]);
 
     frame.render_widget(
