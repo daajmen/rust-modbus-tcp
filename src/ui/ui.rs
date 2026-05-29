@@ -197,10 +197,12 @@ pub fn render(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
         line_helper("Connection stats: ", connection_status, connection_color),
     ]);
 
+    // Widget display modbus gateway data
     frame.render_widget(
         Paragraph::new(data_box).block(Block::new().bold().fg(Color::Blue).borders(Borders::ALL)),
         inner_layout[0],
     );
+    // Widget display modbus data
     frame.render_widget(
         Paragraph::new(app.modbus_data.clone())
             .style(Color::Yellow)
