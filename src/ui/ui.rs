@@ -4,7 +4,7 @@ use ratatui::{
     Frame,
     style::{Color, Stylize},
     text::Line,
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Row, Table},
 };
 
 use crate::modbus::types::ModbusFunction;
@@ -202,13 +202,38 @@ pub fn render(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
         Paragraph::new(data_box).block(Block::new().bold().fg(Color::Blue).borders(Borders::ALL)),
         inner_layout[0],
     );
+
+    let rows: Vec<Row> = app
+        .modbus_data
+        .chunks(7)
+        .map(|chunk| {
+            let mut cols = Vec::new();
+
+            for r in chunk {
+                cols.push(r.register.to_string());
+                cols.push(r.data.to_string());
+            }
+
+            Row::new(cols).style(Style::default().fg(Color::Yellow))
+        })
+        .collect();
+
+    let table = Table::new(rows, [10, 8, 10, 8, 10, 8, 10, 8, 10, 8])
+        .header(
+            Row::new(vec![
+                "Reg", "Val", "Reg", "Val", "Reg", "Val", "Reg", "Val", "Reg", "Val",
+            ])
+            .style(Style::default().fg(Color::Blue).bold()),
+        )
+        .block(
+            Block::new()
+                .title(" Modbus data ")
+                .borders(Borders::ALL)
+                .fg(Color::Blue),
+        );
+
     // Widget display modbus data
-    frame.render_widget(
-        Paragraph::new(app.modbus_data.clone())
-            .style(Color::Yellow)
-            .block(Block::new().bold().fg(Color::Blue).borders(Borders::ALL)),
-        inner_layout[1],
-    );
+    frame.render_widget(table, inner_layout[1]);
 
     match app.ui_state {
         UiStates::ConfGateway => {

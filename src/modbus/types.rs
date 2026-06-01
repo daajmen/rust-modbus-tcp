@@ -52,3 +52,8 @@ impl ModbusRequestData {
         self.quantity = None;
     }
 }
+#[derive(Debug, Default)]
+pub struct RegisterData {
+    pub register: u16,
+    pub data: u16,
+}

@@ -1,5 +1,4 @@
-use crate::modbus::types::{ModbusFunction, ModbusRequestData};
-use std::collections::BTreeMap;
+use crate::modbus::types::{ModbusFunction, ModbusRequestData, RegisterData};
 
 /// States for tui element
 #[derive(Debug, Default)]
@@ -27,7 +26,7 @@ pub struct AppState {
     pub connect_requested: bool,
     pub connection_error: bool,
     pub connection_status: ConnectionStatus,
-    pub modbus_data: String,
+    pub modbus_data: Vec<RegisterData>,
     pub modbus_requests: Vec<ModbusRequestData>,
     pub modbus_request_data: ModbusRequestData,
     pub modbus_write_request: bool,
@@ -45,7 +44,7 @@ impl AppState {
             },
             connect_requested: false,
             connection_status: ConnectionStatus::Disconnected,
-            modbus_data: "".to_string(),
+            modbus_data: vec![],
             modbus_requests: vec![],
             modbus_request_data: ModbusRequestData {
                 slave_id: None,
@@ -75,14 +74,4 @@ pub struct ConnectionSettingsData {
     pub ip_adress: String,
     pub port: String,
     pub poll_time: Option<u16>,
-}
-/// Format modbus data to string
-pub fn handle_modbus_data(app: &mut AppState, data: Vec<BTreeMap<u16, u16>>) {
-    app.modbus_data.clear();
-    app.counter = app.counter + 1;
-
-    for x in data {
-        app.modbus_data.push_str(&format!("{:?}", x));
-        app.modbus_data.push_str("\n");
-    }
 }

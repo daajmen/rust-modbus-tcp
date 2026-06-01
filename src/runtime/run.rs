@@ -1,14 +1,12 @@
-use crate::AppState;
 use crate::modbus::modbus_client::ModbusMaster;
-use crate::ui::app::handle_modbus_data;
 use crate::ui::handler::handle_event;
 use crate::ui::ui::render;
+use crate::{AppState, modbus::types::RegisterData};
 use color_eyre::Result;
 use ratatui::{DefaultTerminal, widgets::ListState};
 use std::time::{Duration, Instant};
 
 pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
-    // TODO CLEAN
     let mut last_poll = Instant::now();
     let mut list_state = ListState::default().with_selected(Some(0));
 
@@ -46,16 +44,22 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                 // Connection failed
                 app.connection_error = connection_ok.is_err();
             }
-            let mut data = vec![];
+
             // Fetch data
             if let Some(master) = master.as_mut() {
+                app.modbus_data.clear();
+                app.counter = app.counter + 1;
                 for r in app.modbus_requests.iter() {
                     if let Ok(response) = master.read_modbus_register(r.clone()) {
-                        data.push(response);
+                        for (register, value) in response {
+                            app.modbus_data.push(RegisterData {
+                                register: register,
+                                data: value,
+                            })
+                        }
                     }
                 }
-
-                handle_modbus_data(app, data);
+                //handle_modbus_data(app, data);
             }
         }
         if !app.connect_requested {

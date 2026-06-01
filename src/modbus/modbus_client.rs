@@ -110,13 +110,11 @@ impl ModbusMaster {
 
         match mb_function {
             ModbusFunction::ReadCoilRegister => Ok(decode_response_bits(
-                byte_count,
                 quantity,
                 &response,
                 start_addr + 10000,
             )),
             ModbusFunction::ReadInputStatusRegister => Ok(decode_response_bits(
-                byte_count,
                 quantity,
                 &response,
                 start_addr + 20000,

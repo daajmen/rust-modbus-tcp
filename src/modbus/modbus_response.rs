@@ -18,20 +18,20 @@ pub fn decode_response(
 }
 
 pub fn decode_response_bits(
-    byte_count: usize,
     quantity: u8,
     stream_response: &[u8],
     start_addr: u16,
 ) -> BTreeMap<u16, u16> {
-    let mut response: BTreeMap<u16, u16> = BTreeMap::new();
-    let mut counter: u16 = start_addr;
-    for _i in 9..byte_count {
-        for i in 0..quantity {
-            let bit = (stream_response[9] >> i) & 1;
-            response.insert(counter, bit as u16);
-            counter = counter + 1;
-        }
+    let mut response = BTreeMap::new();
+
+    for bit_index in 0..quantity {
+        let byte_index = 9 + (bit_index / 8) as usize;
+        let bit_pos = bit_index % 8;
+
+        let bit = (stream_response[byte_index] >> bit_pos) & 1;
+
+        response.insert(start_addr + bit_index as u16, bit as u16);
     }
 
-    return response;
+    response
 }
