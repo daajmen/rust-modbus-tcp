@@ -25,13 +25,16 @@ impl ModbusMaster {
     }
 
     // Connect to Modbus server
-    pub fn connect(&mut self) -> std::io::Result<()> {
-        let s = TcpStream::connect(format!("{}:{}", &self.addr, &self.port));
+    pub fn connect(&mut self) -> Result<()> {
+        let connection_info = format!("{}:{}", &self.addr, &self.port);
 
-        self.stream = Some(s?);
-
-        // Todo clean
-        std::result::Result::Ok(())
+        match TcpStream::connect(connection_info) {
+            Ok(stream) => {
+                self.stream = Some(stream);
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
     }
 
     // Read modbus register

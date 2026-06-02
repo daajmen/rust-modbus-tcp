@@ -37,18 +37,19 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                     &app.connection_settings.port,
                 );
 
-                let connection_ok = client.connect();
-
-                master = Some(client);
-
-                // Connection failed
-                app.connection_error = connection_ok.is_err();
+                match client.connect() {
+                    Ok(_) => master = Some(client),
+                    Err(e) => {
+                        app.connect_requested = false;
+                    }
+                }
             }
 
             // Fetch data
             if let Some(master) = master.as_mut() {
                 app.modbus_data.clear();
                 app.counter = app.counter + 1;
+
                 for r in app.modbus_requests.iter() {
                     if let Ok(response) = master.read_modbus_register(r.clone()) {
                         for (register, value) in response {
