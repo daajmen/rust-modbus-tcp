@@ -15,6 +15,7 @@ pub enum UiStates {
 pub enum ConnectionStatus {
     #[default]
     Disconnected,
+    InitilizeConnection,
     Connected,
     ConnectionErrorTimeOut,
 }
@@ -41,6 +42,7 @@ impl AppState {
                 ip_adress: "127.0.0.1".to_string(),
                 port: 502.to_string(),
                 poll_time: Some(1500),
+                init: false,
             },
             connect_requested: false,
             connection_status: ConnectionStatus::Disconnected,
@@ -59,7 +61,9 @@ impl AppState {
         }
     }
     pub fn update_state(&mut self) {
-        if self.connect_requested && !self.connection_error {
+        if self.connect_requested && !self.connection_settings.init {
+            self.connection_status = ConnectionStatus::InitilizeConnection;
+        } else if self.connect_requested && !self.connection_error {
             self.connection_status = ConnectionStatus::Connected;
         } else if self.connection_error {
             self.connection_status = ConnectionStatus::ConnectionErrorTimeOut;
@@ -74,4 +78,5 @@ pub struct ConnectionSettingsData {
     pub ip_adress: String,
     pub port: String,
     pub poll_time: Option<u16>,
+    pub init: bool,
 }

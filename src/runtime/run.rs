@@ -1,4 +1,5 @@
 use crate::modbus::modbus_client::ModbusMaster;
+use crate::ui::app::ConnectionStatus;
 use crate::ui::handler::handle_event;
 use crate::ui::ui::render;
 use crate::{AppState, modbus::types::RegisterData};
@@ -27,42 +28,57 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
             None => 1500 as u64,
         };
 
-        if app.connect_requested && last_poll.elapsed() >= Duration::from_millis(loop_time) {
-            last_poll = Instant::now();
-            // if connection has not been made
-            if master.is_none() {
-                // Create instance
-                let mut client = ModbusMaster::new(
-                    &app.connection_settings.ip_adress,
-                    &app.connection_settings.port,
-                );
+        match app.connection_status {
+            ConnectionStatus::InitilizeConnection => {
+                if master.is_none() {
+                    // Create instance
+                    let mut client = ModbusMaster::new(
+                        &app.connection_settings.ip_adress,
+                        &app.connection_settings.port,
+                    );
 
-                match client.connect() {
-                    Ok(_) => master = Some(client),
-                    Err(e) => {
-                        app.connect_requested = false;
-                    }
-                }
-            }
-
-            // Fetch data
-            if let Some(master) = master.as_mut() {
-                app.modbus_data.clear();
-                app.counter = app.counter + 1;
-
-                for r in app.modbus_requests.iter() {
-                    if let Ok(response) = master.read_modbus_register(r.clone()) {
-                        for (register, value) in response {
-                            app.modbus_data.push(RegisterData {
-                                register: register,
-                                data: value,
-                            })
+                    match client.connect() {
+                        Ok(_) => {
+                            master = Some(client);
+                            app.connection_settings.init = true;
+                        }
+                        Err(e) => {
+                            app.connect_requested = false;
+                            app.connection_settings.init = false;
                         }
                     }
                 }
-                //handle_modbus_data(app, data);
             }
+            ConnectionStatus::Connected => {
+                if last_poll.elapsed() >= Duration::from_millis(loop_time) {
+                    last_poll = Instant::now();
+
+                    // Fetch data
+                    if let Some(master) = master.as_mut() {
+                        app.modbus_data.clear();
+                        app.counter = app.counter + 1;
+
+                        for r in app.modbus_requests.iter() {
+                            if let Ok(response) = master.read_modbus_register(r.clone()) {
+                                for (register, value) in response {
+                                    app.modbus_data.push(RegisterData {
+                                        register: register,
+                                        data: value,
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            ConnectionStatus::Disconnected => {
+                app.counter = 0;
+                app.connection_settings.init = false;
+            }
+
+            _ => {}
         }
+
         if !app.connect_requested {
             master = None;
         }

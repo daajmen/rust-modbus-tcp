@@ -175,6 +175,10 @@ pub fn render(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
             connection_status = "CONNECTION FAILED!!";
             connection_color = Color::Red;
         }
+        ConnectionStatus::InitilizeConnection => {
+            connection_status = "Trying to connect...";
+            connection_color = Color::Red;
+        }
     }
 
     let data_box = Text::from(vec![
