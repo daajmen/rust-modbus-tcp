@@ -30,6 +30,7 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
 
         match app.connection_status {
             ConnectionStatus::InitilizeConnection => {
+                app.connection_error = false;
                 if master.is_none() {
                     // Create instance
                     let mut client = ModbusMaster::new(
@@ -45,26 +46,33 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                         Err(e) => {
                             app.connect_requested = false;
                             app.connection_settings.init = false;
+                            app.connection_error = true;
                         }
                     }
                 }
             }
             ConnectionStatus::Connected => {
                 if last_poll.elapsed() >= Duration::from_millis(loop_time) {
+                    app.connection_error = false;
                     last_poll = Instant::now();
 
                     // Fetch data
                     if let Some(master) = master.as_mut() {
                         app.modbus_data.clear();
-                        app.counter = app.counter + 1;
 
                         for r in app.modbus_requests.iter() {
-                            if let Ok(response) = master.read_modbus_register(r.clone()) {
-                                for (register, value) in response {
-                                    app.modbus_data.push(RegisterData {
-                                        register: register,
-                                        data: value,
-                                    })
+                            match master.read_modbus_register(r.clone()) {
+                                Ok(response) => {
+                                    app.counter = app.counter + 1;
+                                    for (register, value) in response {
+                                        app.modbus_data.push(RegisterData {
+                                            register: register,
+                                            data: value,
+                                        })
+                                    }
+                                }
+                                Err(_) => {
+                                    app.connection_error = true;
                                 }
                             }
                         }
@@ -75,8 +83,9 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                 app.counter = 0;
                 app.connection_settings.init = false;
             }
-
-            _ => {}
+            ConnectionStatus::ConnectionErrorTimeOut => {
+                app.connection_error = true;
+            }
         }
 
         if !app.connect_requested {

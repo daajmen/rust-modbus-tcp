@@ -37,43 +37,43 @@ impl ModbusMaster {
         }
     }
 
+    fn build_read_register(
+        modbus_function: ModbusFunction,
+        unit_id: u8,
+        start_addr: u16,
+        quantity: u16,
+    ) -> Vec<u8> {
+        let transaction_id: u16 = 0x1501;
+        let protocol_id: u16 = 0;
+
+        // Startadress 2byte, quantity 2byte
+
+        let addr_bytes = start_addr.to_be_bytes();
+        let qty_bytes = quantity.to_be_bytes();
+
+        let data = [addr_bytes[0], addr_bytes[1], qty_bytes[0], qty_bytes[1]];
+        let length: u16 = 1 + 1 + data.len() as u16;
+
+        // Request
+        let mut request: Vec<u8> = Vec::new();
+
+        request.extend_from_slice(&transaction_id.to_be_bytes()); // High / Low
+        request.extend_from_slice(&protocol_id.to_be_bytes()); // 00 = modbus TCP
+        request.extend_from_slice(&length.to_be_bytes()); // unit_id + function_code + data
+
+        request.push(unit_id); // ID <
+        request.push(modbus_function as u8); // Modbus kod
+
+        request.extend_from_slice(&data); // Payload
+
+        return request;
+    }
+
     // Read modbus register
     pub fn read_modbus_register(
         &mut self,
         request_data: ModbusRequestData,
     ) -> Result<BTreeMap<u16, u16>> {
-        fn build_read_register(
-            modbus_function: ModbusFunction,
-            unit_id: u8,
-            start_addr: u16,
-            quantity: u16,
-        ) -> Vec<u8> {
-            let transaction_id: u16 = 0x1501;
-            let protocol_id: u16 = 0;
-
-            // Startadress 2byte, quantity 2byte
-
-            let addr_bytes = start_addr.to_be_bytes();
-            let qty_bytes = quantity.to_be_bytes();
-
-            let data = [addr_bytes[0], addr_bytes[1], qty_bytes[0], qty_bytes[1]];
-            let length: u16 = 1 + 1 + data.len() as u16;
-
-            // Request
-            let mut request: Vec<u8> = Vec::new();
-
-            request.extend_from_slice(&transaction_id.to_be_bytes()); // High / Low
-            request.extend_from_slice(&protocol_id.to_be_bytes()); // 00 = modbus TCP
-            request.extend_from_slice(&length.to_be_bytes()); // unit_id + function_code + data
-
-            request.push(unit_id); // ID <
-            request.push(modbus_function as u8); // Modbus kod
-
-            request.extend_from_slice(&data); // Payload
-
-            return request;
-        }
-
         let mb_function = request_data.function.clone();
 
         let Some(stream) = self.stream.as_mut() else {
@@ -105,7 +105,7 @@ impl ModbusMaster {
         };
 
         let modbus_request =
-            build_read_register(request_data.function, slave_id, start_addr, quantity as u16);
+            Self::build_read_register(request_data.function, slave_id, start_addr, quantity as u16);
         stream.write(&modbus_request)?;
 
         let mut response = [0u8; 254];

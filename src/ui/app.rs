@@ -63,10 +63,10 @@ impl AppState {
     pub fn update_state(&mut self) {
         if self.connect_requested && !self.connection_settings.init {
             self.connection_status = ConnectionStatus::InitilizeConnection;
-        } else if self.connect_requested && !self.connection_error {
-            self.connection_status = ConnectionStatus::Connected;
         } else if self.connection_error {
             self.connection_status = ConnectionStatus::ConnectionErrorTimeOut;
+        } else if self.connect_requested {
+            self.connection_status = ConnectionStatus::Connected;
         } else {
             self.connection_status = ConnectionStatus::Disconnected;
         }
