@@ -111,11 +111,6 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                 }
                 _ => {}
             },
-            // Tab
-            //event::KeyCode::Tab => match app.ui_state {
-            //UiStates::ConfGateway => {}
-            //_ => {}
-            //},
             // Backspace
             event::KeyCode::Backspace => match app.ui_state {
                 UiStates::ConfGateway => {
