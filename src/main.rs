@@ -1,10 +1,10 @@
 use crate::runtime::run::run;
-use crate::ui::app::AppState;
+use crate::tui::app::AppState;
 use color_eyre::Result;
 
 mod modbus;
 mod runtime;
-mod ui;
+mod tui;
 
 fn main() -> Result<()> {
     color_eyre::install()?;

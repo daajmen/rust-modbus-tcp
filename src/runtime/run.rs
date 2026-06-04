@@ -1,7 +1,7 @@
 use crate::modbus::modbus_client::ModbusMaster;
-use crate::ui::app::ConnectionStatus;
-use crate::ui::handler::handle_event;
-use crate::ui::ui::render;
+use crate::tui::app::ConnectionStatus;
+use crate::tui::handler::handle_event;
+use crate::tui::ui::render;
 use crate::{AppState, modbus::types::RegisterData};
 use color_eyre::Result;
 use ratatui::{DefaultTerminal, widgets::ListState};

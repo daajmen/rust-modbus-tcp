@@ -105,7 +105,7 @@ impl ModbusMaster {
 
         let modbus_request =
             Self::build_read_register(request_data.function, slave_id, start_addr, quantity as u16);
-        stream.write(&modbus_request)?;
+        stream.write_all(&modbus_request)?;
 
         let mut response = [0u8; 254];
         let byte_count: usize = stream.read(&mut response)?;

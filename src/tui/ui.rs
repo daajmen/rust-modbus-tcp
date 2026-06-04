@@ -8,27 +8,25 @@ use ratatui::{
 };
 
 use crate::modbus::types::ModbusFunction;
-use crate::ui::app::{AppState, ConnectionStatus, UiStates};
+use crate::tui::app::{AppState, ConnectionStatus, UiStates};
 
 /// Creats a centered popup windows Rect
 fn centered_rect(frame: &mut Frame) -> Rect {
-    let popup = Rect {
+    Rect {
         x: frame.area().width / 4,
         y: frame.area().height / 4,
         width: frame.area().width / 2,
         height: frame.area().height / 3,
-    };
-    popup
+    }
 }
 
 /// Builds window that contains the list function
 fn list_window<'a>(title: &'a str, items: Vec<String>) -> List<'a> {
-    let list = List::new(items)
+    List::new(items)
         .style(Color::Yellow)
         .highlight_style(Modifier::REVERSED)
         .highlight_symbol("> ")
-        .block(Block::new().title(title).borders(Borders::ALL));
-    list
+        .block(Block::new().title(title).borders(Borders::ALL))
 }
 
 fn line_helper(text: impl Into<String>, value: impl Into<String>, color: Color) -> Line<'static> {
