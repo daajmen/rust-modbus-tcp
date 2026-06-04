@@ -207,7 +207,7 @@ pub fn render(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
 
     let rows: Vec<Row> = app
         .modbus_data
-        .chunks(7)
+        .chunks(5)
         .map(|chunk| {
             let mut cols = Vec::new();
 

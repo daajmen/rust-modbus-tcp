@@ -1,12 +1,19 @@
-### Goals 
-Using this as a project to learn rust, with a background as a automation engineer programming mostly Beckhoff PLCs. The learning curve is a bit steep, however the mission is to build 30-60 min every day on this application.  
-
-
-### Application -> under development.
-- Modbus TCP tool for debugging.
-- Terminal interface.
-- Be good enough to use in my daily work. 
-- Built in Rust.
-
-
+# Application Modbus TCP client written in rust.
 ![alt text](assets/image.png)
+## Features
+- Modbus TCP client
+- Read Coils
+- Read Discrete Inputs
+- Read Holding Registers
+- Read Input Registers
+- TUI interface
+- Configurable polling
+
+## Known Limitations
+- Error handling when invalid response from server
+- Unable to write to data to modbus registers
+- Unable to convert response data from server UINT/INT etc.
+
+## Project Background 
+This is my absolute first application written in rust, my focus with this project was to learn the basics in rust. The plan was to spend 30-60 minutes every day to get something working, get the first release. Hopefully when i come back to this project i will laugh at how bad this application is.   
+Working today as Automation Engineer programmering PLCs according to the international standard IEC 61131-3.

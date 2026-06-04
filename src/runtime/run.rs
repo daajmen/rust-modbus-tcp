@@ -55,7 +55,7 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                 if last_poll.elapsed() >= Duration::from_millis(loop_time) {
                     app.connection_error = false;
                     last_poll = Instant::now();
-
+                    app.counter += 1;
                     // Fetch data
                     if let Some(master) = master.as_mut() {
                         app.modbus_data.clear();
@@ -63,7 +63,6 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                         for r in app.modbus_requests.iter() {
                             match master.read_modbus_register(r.clone()) {
                                 Ok(response) => {
-                                    app.counter += 1;
                                     for (register, value) in response {
                                         app.modbus_data.push(RegisterData {
                                             register,
