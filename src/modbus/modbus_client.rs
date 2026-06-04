@@ -111,12 +111,12 @@ impl ModbusMaster {
         let byte_count: usize = stream.read(&mut response)?;
 
         match mb_function {
-            ModbusFunction::CoilRegister => Ok(decode_response_bits(
+            ModbusFunction::Coil => Ok(decode_response_bits(
                 quantity,
                 &response,
                 start_addr + 10000,
             )),
-            ModbusFunction::InputStatusRegister => Ok(decode_response_bits(
+            ModbusFunction::DiscreteInput => Ok(decode_response_bits(
                 quantity,
                 &response,
                 start_addr + 20000,

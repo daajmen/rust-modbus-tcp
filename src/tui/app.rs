@@ -50,7 +50,7 @@ impl AppState {
             modbus_requests: vec![],
             modbus_request_data: ModbusRequestData {
                 slave_id: None,
-                function: ModbusFunction::CoilRegister,
+                function: ModbusFunction::Coil,
                 start_addr: None,
                 quantity: None,
             },

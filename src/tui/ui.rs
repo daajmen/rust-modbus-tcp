@@ -43,8 +43,8 @@ fn render_register_popup(frame: &mut Frame, list_state: &mut ListState) {
     frame.render_widget(Clear, popup);
 
     let items = [
-        ModbusFunction::CoilRegister.as_str().to_string(),
-        ModbusFunction::InputStatusRegister.as_str().to_string(),
+        ModbusFunction::Coil.as_str().to_string(),
+        ModbusFunction::DiscreteInput.as_str().to_string(),
         ModbusFunction::InputRegister.as_str().to_string(),
         ModbusFunction::HoldingRegister.as_str().to_string(),
     ];
