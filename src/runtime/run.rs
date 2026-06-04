@@ -25,7 +25,7 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
 
         let loop_time = match app.connection_settings.poll_time {
             Some(value) => value as u64,
-            None => 1500 as u64,
+            None => 1500_u64,
         };
 
         match app.connection_status {
@@ -43,7 +43,7 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                             master = Some(client);
                             app.connection_settings.init = true;
                         }
-                        Err(e) => {
+                        Err(_e) => {
                             app.connect_requested = false;
                             app.connection_settings.init = false;
                             app.connection_error = true;
@@ -63,10 +63,10 @@ pub fn run(mut terminal: DefaultTerminal, app: &mut AppState) -> Result<()> {
                         for r in app.modbus_requests.iter() {
                             match master.read_modbus_register(r.clone()) {
                                 Ok(response) => {
-                                    app.counter = app.counter + 1;
+                                    app.counter += 1;
                                     for (register, value) in response {
                                         app.modbus_data.push(RegisterData {
-                                            register: register,
+                                            register,
                                             data: value,
                                         })
                                     }

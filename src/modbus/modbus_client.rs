@@ -3,7 +3,6 @@ use std::io::Result;
 use std::io::prelude::*;
 
 use std::net::TcpStream;
-use std::u8;
 
 use crate::modbus::modbus_response::{decode_response, decode_response_bits};
 use crate::modbus::types::{ModbusFunction, ModbusRequestData};
@@ -66,7 +65,7 @@ impl ModbusMaster {
 
         request.extend_from_slice(&data); // Payload
 
-        return request;
+        request
     }
 
     // Read modbus register
@@ -74,7 +73,7 @@ impl ModbusMaster {
         &mut self,
         request_data: ModbusRequestData,
     ) -> Result<BTreeMap<u16, u16>> {
-        let mb_function = request_data.function.clone();
+        let mb_function = request_data.function;
 
         let Some(stream) = self.stream.as_mut() else {
             return Err(std::io::Error::new(
@@ -112,20 +111,20 @@ impl ModbusMaster {
         let byte_count: usize = stream.read(&mut response)?;
 
         match mb_function {
-            ModbusFunction::ReadCoilRegister => Ok(decode_response_bits(
+            ModbusFunction::CoilRegister => Ok(decode_response_bits(
                 quantity,
                 &response,
                 start_addr + 10000,
             )),
-            ModbusFunction::ReadInputStatusRegister => Ok(decode_response_bits(
+            ModbusFunction::InputStatusRegister => Ok(decode_response_bits(
                 quantity,
                 &response,
                 start_addr + 20000,
             )),
-            ModbusFunction::ReadInputRegister => {
+            ModbusFunction::InputRegister => {
                 Ok(decode_response(byte_count, &response, start_addr + 30000))
             }
-            ModbusFunction::ReadHoldingRegister => {
+            ModbusFunction::HoldingRegister => {
                 Ok(decode_response(byte_count, &response, start_addr + 40000))
             }
         }

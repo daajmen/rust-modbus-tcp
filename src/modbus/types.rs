@@ -1,19 +1,19 @@
 #[derive(Clone, Copy, Debug, Default)]
 pub enum ModbusFunction {
     #[default]
-    ReadCoilRegister = 1,
-    ReadInputStatusRegister = 2,
-    ReadInputRegister = 4,
-    ReadHoldingRegister = 3,
+    CoilRegister = 1,
+    InputStatusRegister = 2,
+    InputRegister = 4,
+    HoldingRegister = 3,
 }
 
 impl ModbusFunction {
     pub fn as_str(&self) -> &'static str {
         match self {
-            ModbusFunction::ReadCoilRegister => "ReadCoilRegister",
-            ModbusFunction::ReadInputStatusRegister => "ReadInputStatusRegister",
-            ModbusFunction::ReadInputRegister => "ReadInputRegister",
-            ModbusFunction::ReadHoldingRegister => "ReadHoldingRegister",
+            ModbusFunction::CoilRegister => "ReadCoilRegister",
+            ModbusFunction::InputStatusRegister => "ReadInputStatusRegister",
+            ModbusFunction::InputRegister => "ReadInputRegister",
+            ModbusFunction::HoldingRegister => "ReadHoldingRegister",
         }
     }
 }

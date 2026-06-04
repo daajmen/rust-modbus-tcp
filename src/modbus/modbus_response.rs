@@ -11,10 +11,10 @@ pub fn decode_response(
     for i in (9..byte_count).step_by(2) {
         let var = u16::from_be_bytes([stream_response[i], stream_response[i + 1]]);
         response.insert(counter, var);
-        counter = counter + 1;
+        counter += 1;
     }
 
-    return response;
+    response
 }
 
 pub fn decode_response_bits(

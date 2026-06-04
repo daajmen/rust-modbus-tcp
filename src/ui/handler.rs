@@ -178,23 +178,22 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                             let index_state = list_state.selected();
                             match index_state {
                                 Some(0) => {
-                                    app.modbus_request_data.function =
-                                        ModbusFunction::ReadCoilRegister;
+                                    app.modbus_request_data.function = ModbusFunction::CoilRegister;
                                     app.ui_state = UiStates::AddRegistersInput;
                                 }
                                 Some(1) => {
                                     app.modbus_request_data.function =
-                                        ModbusFunction::ReadInputStatusRegister;
+                                        ModbusFunction::InputStatusRegister;
                                     app.ui_state = UiStates::AddRegistersInput;
                                 }
                                 Some(2) => {
                                     app.modbus_request_data.function =
-                                        ModbusFunction::ReadInputRegister;
+                                        ModbusFunction::InputRegister;
                                     app.ui_state = UiStates::AddRegistersInput;
                                 }
                                 Some(3) => {
                                     app.modbus_request_data.function =
-                                        ModbusFunction::ReadHoldingRegister;
+                                        ModbusFunction::HoldingRegister;
                                     app.ui_state = UiStates::AddRegistersInput;
                                 }
                                 _ => {}
