@@ -18,7 +18,7 @@ fn centered_rect(frame: &mut Frame) -> Rect {
         width: frame.area().width / 2,
         height: frame.area().height / 3,
     };
-    return popup;
+    popup
 }
 
 /// Builds window that contains the list function
@@ -28,7 +28,7 @@ fn list_window<'a>(title: &'a str, items: Vec<String>) -> List<'a> {
         .highlight_style(Modifier::REVERSED)
         .highlight_symbol("> ")
         .block(Block::new().title(title).borders(Borders::ALL));
-    return list;
+    list
 }
 
 fn line_helper(text: impl Into<String>, value: impl Into<String>, color: Color) -> Line<'static> {
@@ -67,15 +67,15 @@ fn render_register_configure_popup(frame: &mut Frame, app: &AppState, list_state
     let items = [
         match app.modbus_request_data.slave_id {
             Some(value) => format!("Slave id: {}", value),
-            None => format!("Slave id: None",),
+            None => "Slave id: None".to_string(),
         },
         match app.modbus_request_data.start_addr {
             Some(value) => format!("Start register: {}", value),
-            None => format!("Start register: None",),
+            None => "Start register: None".to_string(),
         },
         match app.modbus_request_data.quantity {
             Some(value) => format!("Quantity: {}", value),
-            None => format!("Quantity: None",),
+            None => "Quantity: None".to_string(),
         },
     ];
 

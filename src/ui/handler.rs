@@ -53,166 +53,164 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
     }
 
     if event::poll(Duration::from_millis(50))? {
-        if let Event::Key(key) = event::read()? {
-            if key.kind == KeyEventKind::Press {
-                match key.code {
-                    event::KeyCode::Char('q') => return Ok(true),
-                    event::KeyCode::Char('c') => app.connect_requested = !app.connect_requested,
-                    event::KeyCode::Char('C') => app.ui_state = UiStates::ConfGateway,
-                    event::KeyCode::Char('A') => app.ui_state = UiStates::AddRegisters,
-                    event::KeyCode::Char(c) => match app.ui_state {
-                        UiStates::ConfGateway => {
-                            let index_state = list_state.selected();
-                            match index_state {
-                                Some(0) => {
-                                    app.connection_settings.ip_adress.push(c);
-                                }
-                                Some(1) => {
-                                    app.connection_settings.port.push(c);
-                                }
-                                Some(2) => {
-                                    app.connection_settings.poll_time =
-                                        write_to_u16(app.connection_settings.poll_time, c)
-                                }
-                                _ => {}
+        if let Event::Key(key) = event::read()?
+            && key.kind == KeyEventKind::Press
+        {
+            match key.code {
+                event::KeyCode::Char('q') => return Ok(true),
+                event::KeyCode::Char('c') => app.connect_requested = !app.connect_requested,
+                event::KeyCode::Char('C') => app.ui_state = UiStates::ConfGateway,
+                event::KeyCode::Char('A') => app.ui_state = UiStates::AddRegisters,
+                event::KeyCode::Char(c) => match app.ui_state {
+                    UiStates::ConfGateway => {
+                        let index_state = list_state.selected();
+                        match index_state {
+                            Some(0) => {
+                                app.connection_settings.ip_adress.push(c);
                             }
-                        }
-                        UiStates::AddRegistersInput => {
-                            let index_state = list_state.selected();
-                            match index_state {
-                                Some(0) => {
-                                    app.modbus_request_data.slave_id =
-                                        write_to_u8(app.modbus_request_data.slave_id, c);
-                                }
-                                Some(1) => {
-                                    app.modbus_request_data.start_addr =
-                                        write_to_u16(app.modbus_request_data.start_addr, c);
-                                }
-                                Some(2) => {
-                                    app.modbus_request_data.quantity =
-                                        write_to_u8(app.modbus_request_data.quantity, c);
-                                }
-                                _ => {}
+                            Some(1) => {
+                                app.connection_settings.port.push(c);
                             }
+                            Some(2) => {
+                                app.connection_settings.poll_time =
+                                    write_to_u16(app.connection_settings.poll_time, c)
+                            }
+                            _ => {}
                         }
-                        _ => {}
-                    },
-                    // Escape
-                    event::KeyCode::Esc => match app.ui_state {
-                        UiStates::ConfGateway => {
-                            app.ui_state = UiStates::Home;
+                    }
+                    UiStates::AddRegistersInput => {
+                        let index_state = list_state.selected();
+                        match index_state {
+                            Some(0) => {
+                                app.modbus_request_data.slave_id =
+                                    write_to_u8(app.modbus_request_data.slave_id, c);
+                            }
+                            Some(1) => {
+                                app.modbus_request_data.start_addr =
+                                    write_to_u16(app.modbus_request_data.start_addr, c);
+                            }
+                            Some(2) => {
+                                app.modbus_request_data.quantity =
+                                    write_to_u8(app.modbus_request_data.quantity, c);
+                            }
+                            _ => {}
                         }
-                        UiStates::AddRegisters => {
-                            app.ui_state = UiStates::Home;
+                    }
+                    _ => {}
+                },
+                // Escape
+                event::KeyCode::Esc => match app.ui_state {
+                    UiStates::ConfGateway => {
+                        app.ui_state = UiStates::Home;
+                    }
+                    UiStates::AddRegisters => {
+                        app.ui_state = UiStates::Home;
+                    }
+                    UiStates::AddRegistersInput => {
+                        app.ui_state = UiStates::AddRegisters;
+                    }
+                    _ => {}
+                },
+                // Tab
+                event::KeyCode::Tab => match app.ui_state {
+                    UiStates::ConfGateway => {}
+                    _ => {}
+                },
+                // Backspace
+                event::KeyCode::Backspace => match app.ui_state {
+                    UiStates::ConfGateway => {
+                        let index_state = list_state.selected();
+                        match index_state {
+                            Some(0) => {
+                                app.connection_settings.ip_adress.pop();
+                            }
+                            Some(1) => {
+                                app.connection_settings.port.pop();
+                            }
+                            Some(2) => {
+                                app.connection_settings.poll_time =
+                                    backspace_rm_u16(app.connection_settings.poll_time);
+                            }
+                            _ => {}
                         }
-                        UiStates::AddRegistersInput => {
+                    }
+
+                    UiStates::AddRegistersInput => {
+                        let index_state = list_state.selected();
+                        match index_state {
+                            Some(0) => {
+                                app.modbus_request_data.slave_id =
+                                    backspace_rm_u8(app.modbus_request_data.slave_id);
+                            }
+                            Some(1) => {
+                                app.modbus_request_data.start_addr =
+                                    backspace_rm_u16(app.modbus_request_data.start_addr);
+                            }
+                            Some(2) => {
+                                app.modbus_request_data.quantity =
+                                    backspace_rm_u8(app.modbus_request_data.quantity);
+                            }
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                },
+                // Down
+                event::KeyCode::Down => match app.ui_state {
+                    UiStates::AddRegisters
+                    | UiStates::AddRegistersInput
+                    | UiStates::ConfGateway => {
+                        list_state.select_next();
+                    }
+                    _ => {}
+                },
+                // Up
+                event::KeyCode::Up => match app.ui_state {
+                    UiStates::AddRegisters
+                    | UiStates::AddRegistersInput
+                    | UiStates::ConfGateway => {
+                        list_state.select_previous();
+                    }
+                    _ => {}
+                },
+                // Enter
+                event::KeyCode::Enter => match app.ui_state {
+                    UiStates::AddRegisters => {
+                        let index_state = list_state.selected();
+                        match index_state {
+                            Some(0) => {
+                                app.modbus_request_data.function = ModbusFunction::CoilRegister;
+                                app.ui_state = UiStates::AddRegistersInput;
+                            }
+                            Some(1) => {
+                                app.modbus_request_data.function =
+                                    ModbusFunction::InputStatusRegister;
+                                app.ui_state = UiStates::AddRegistersInput;
+                            }
+                            Some(2) => {
+                                app.modbus_request_data.function = ModbusFunction::InputRegister;
+                                app.ui_state = UiStates::AddRegistersInput;
+                            }
+                            Some(3) => {
+                                app.modbus_request_data.function = ModbusFunction::HoldingRegister;
+                                app.ui_state = UiStates::AddRegistersInput;
+                            }
+                            _ => {}
+                        }
+                    }
+                    UiStates::AddRegistersInput => {
+                        if app.modbus_request_data.slave_id.is_some()
+                            && app.modbus_request_data.start_addr.is_some()
+                            && app.modbus_request_data.quantity.is_some()
+                        {
+                            app.modbus_write_request = true;
                             app.ui_state = UiStates::AddRegisters;
                         }
-                        _ => {}
-                    },
-                    // Tab
-                    event::KeyCode::Tab => match app.ui_state {
-                        UiStates::ConfGateway => {}
-                        _ => {}
-                    },
-                    // Backspace
-                    event::KeyCode::Backspace => match app.ui_state {
-                        UiStates::ConfGateway => {
-                            let index_state = list_state.selected();
-                            match index_state {
-                                Some(0) => {
-                                    app.connection_settings.ip_adress.pop();
-                                }
-                                Some(1) => {
-                                    app.connection_settings.port.pop();
-                                }
-                                Some(2) => {
-                                    app.connection_settings.poll_time =
-                                        backspace_rm_u16(app.connection_settings.poll_time);
-                                }
-                                _ => {}
-                            }
-                        }
-
-                        UiStates::AddRegistersInput => {
-                            let index_state = list_state.selected();
-                            match index_state {
-                                Some(0) => {
-                                    app.modbus_request_data.slave_id =
-                                        backspace_rm_u8(app.modbus_request_data.slave_id);
-                                }
-                                Some(1) => {
-                                    app.modbus_request_data.start_addr =
-                                        backspace_rm_u16(app.modbus_request_data.start_addr);
-                                }
-                                Some(2) => {
-                                    app.modbus_request_data.quantity =
-                                        backspace_rm_u8(app.modbus_request_data.quantity);
-                                }
-                                _ => {}
-                            }
-                        }
-                        _ => {}
-                    },
-                    // Down
-                    event::KeyCode::Down => match app.ui_state {
-                        UiStates::AddRegisters
-                        | UiStates::AddRegistersInput
-                        | UiStates::ConfGateway => {
-                            list_state.select_next();
-                        }
-                        _ => {}
-                    },
-                    // Up
-                    event::KeyCode::Up => match app.ui_state {
-                        UiStates::AddRegisters
-                        | UiStates::AddRegistersInput
-                        | UiStates::ConfGateway => {
-                            list_state.select_previous();
-                        }
-                        _ => {}
-                    },
-                    // Enter
-                    event::KeyCode::Enter => match app.ui_state {
-                        UiStates::AddRegisters => {
-                            let index_state = list_state.selected();
-                            match index_state {
-                                Some(0) => {
-                                    app.modbus_request_data.function = ModbusFunction::CoilRegister;
-                                    app.ui_state = UiStates::AddRegistersInput;
-                                }
-                                Some(1) => {
-                                    app.modbus_request_data.function =
-                                        ModbusFunction::InputStatusRegister;
-                                    app.ui_state = UiStates::AddRegistersInput;
-                                }
-                                Some(2) => {
-                                    app.modbus_request_data.function =
-                                        ModbusFunction::InputRegister;
-                                    app.ui_state = UiStates::AddRegistersInput;
-                                }
-                                Some(3) => {
-                                    app.modbus_request_data.function =
-                                        ModbusFunction::HoldingRegister;
-                                    app.ui_state = UiStates::AddRegistersInput;
-                                }
-                                _ => {}
-                            }
-                        }
-                        UiStates::AddRegistersInput => {
-                            if app.modbus_request_data.slave_id.is_some()
-                                && app.modbus_request_data.start_addr.is_some()
-                                && app.modbus_request_data.quantity.is_some()
-                            {
-                                app.modbus_write_request = true;
-                                app.ui_state = UiStates::AddRegisters;
-                            }
-                        }
-                        UiStates::ConfGateway => app.ui_state = UiStates::Home,
-                        _ => {}
-                    },
+                    }
+                    UiStates::ConfGateway => app.ui_state = UiStates::Home,
                     _ => {}
-                }
+                },
+                _ => {}
             }
         }
     }
