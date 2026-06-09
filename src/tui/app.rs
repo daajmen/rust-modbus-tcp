@@ -8,6 +8,7 @@ pub enum UiStates {
     ConfGateway,
     AddRegisters,
     AddRegistersInput,
+    InfoPopup,
 }
 
 /// States for connection status
@@ -33,6 +34,7 @@ pub struct AppState {
     pub modbus_write_request: bool,
     pub counter: u16,
     pub ui_state: UiStates,
+    pub ui_info_stream: String,
 }
 
 impl AppState {
@@ -58,6 +60,7 @@ impl AppState {
             counter: 0,
             connection_error: false,
             ui_state: UiStates::Home,
+            ui_info_stream: "".to_string(),
         }
     }
     pub fn update_state(&mut self) {
