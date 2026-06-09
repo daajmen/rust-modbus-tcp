@@ -58,6 +58,19 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
     {
         match key.code {
             event::KeyCode::Char('q') => return Ok(true),
+            event::KeyCode::Char('D') => match app.modbus_requests.pop() {
+                Some(poped) => {
+                    app.ui_state = UiStates::InfoPopup;
+                    app.ui_info_stream = match poped.start_addr {
+                        Some(x) => format!("Removed register: {:?}", x),
+                        None => "We should not enter here :) ".to_string(),
+                    }
+                }
+                None => {
+                    app.ui_state = UiStates::InfoPopup;
+                    app.ui_info_stream = "No register removed".to_string();
+                }
+            },
             event::KeyCode::Char('c') => app.connect_requested = !app.connect_requested,
             event::KeyCode::Char('C') => app.ui_state = UiStates::ConfGateway,
             event::KeyCode::Char('A') => app.ui_state = UiStates::AddRegisters,
@@ -109,7 +122,12 @@ pub fn handle_event(app: &mut AppState, list_state: &mut ListState) -> Result<bo
                 UiStates::AddRegistersInput => {
                     app.ui_state = UiStates::AddRegisters;
                 }
-                _ => {}
+                UiStates::Home => {
+                    app.ui_state = UiStates::Home;
+                }
+                UiStates::InfoPopup => {
+                    app.ui_state = UiStates::Home;
+                }
             },
             // Backspace
             event::KeyCode::Backspace => match app.ui_state {

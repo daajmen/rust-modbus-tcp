@@ -10,6 +10,18 @@ use ratatui::{
 use crate::modbus::types::ModbusFunction;
 use crate::tui::app::{AppState, ConnectionStatus, UiStates};
 
+/// Info popup
+fn display_info_popup(frame: &mut Frame) -> Rect {
+    let height = frame.area().height / 6;
+
+    Rect {
+        x: 0,
+        y: frame.area().height.saturating_sub(height),
+        width: frame.area().width / 4,
+        height,
+    }
+}
+
 /// Creats a centered popup windows Rect
 fn centered_rect(frame: &mut Frame) -> Rect {
     Rect {
@@ -103,6 +115,25 @@ fn render_connection_settings(frame: &mut Frame, app: &AppState, list_state: &mu
         list_window("Gateway connection settings", items.to_vec()),
         popup,
         list_state,
+    );
+}
+
+/// Render info popup
+pub fn render_info_popup(frame: &mut Frame, info: &str) {
+    let popup = display_info_popup(frame);
+
+    let block = Block::bordered()
+        .title("Info")
+        .fg(Color::Yellow)
+        .borders(Borders::ALL)
+        .style(Style::new().yellow().on_black());
+
+    frame.render_widget(Clear, popup);
+    frame.render_widget(
+        Paragraph::new(info)
+            .block(block)
+            .style(Style::default().bg(Color::Black)),
+        popup,
     );
 }
 
@@ -247,6 +278,10 @@ pub fn render(frame: &mut Frame, app: &AppState, list_state: &mut ListState) {
         UiStates::AddRegistersInput => {
             render_register_configure_popup(frame, app, list_state);
         }
+        UiStates::InfoPopup => {
+            render_info_popup(frame, &app.ui_info_stream);
+        }
+
         _ => {}
     }
 }
