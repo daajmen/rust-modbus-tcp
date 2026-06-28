@@ -1,59 +1,93 @@
-#[derive(Clone, Copy, Debug, Default)]
-pub enum ModbusFunction {
+#[derive(Debug, Clone, Default)]
+pub enum FunctionCode {
     #[default]
-    Coil = 1,
-    DiscreteInput = 2,
-    InputRegister = 4,
-    HoldingRegister = 3,
+    ReadCoil = 0x01,
+    ReadDiscreteInputs = 0x02,
+    ReadMultipleHoldingRegisters = 0x03,
+    ReadInputRegisters = 0x04,
+    WriteSingleCoil = 0x05,
+    WriteSingleHoldingRegister = 0x06,
+    WriteMultipleCoils = 0x15,
+    WriteMultipleHolding = 0x16,
+    MaskWriteRegister = 0x22,
+    ReadWriteHoldRegisters = 0x23,
+    ReadFIFOQueue = 0x24,
 }
 
-impl ModbusFunction {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            ModbusFunction::Coil => "Coil",
-            ModbusFunction::DiscreteInput => "DiscreteInput",
-            ModbusFunction::InputRegister => "InputRegister",
-            ModbusFunction::HoldingRegister => "HoldingRegister",
-        }
-    }
+pub struct PrimaryTables {
+    pub discrete_input: Option<bool>,
+    pub coil: Option<bool>,
+    pub input_register: Option<u16>,
+    pub holding_register: Option<u16>,
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct ModbusRequestData {
-    pub slave_id: Option<u8>,
-    pub function: ModbusFunction,
-    pub start_addr: Option<u16>,
-    pub quantity: Option<u8>,
+pub enum ModbusExceptionCode {
+    /// Function code received in the query is not recognized or allowed by server
+    IllegalFunction = 0x01,
+    /// Data address of some or all the required entities are not allowed or do not exist in server
+    IllegalDataAdress = 0x02,
+    /// Value is not accepted by server
+    IllegalDataValue = 0x03,
+    /// Unrecoverable error occurred while server was attempting to perform requested action
+    ServerDeviceFailure = 0x04,
+    /// Server has accepted request and is processing it, but a long duration of time is required. This response is returned to prevent a timeout error from occurring in the client. client can next issue a Poll Program Complete message to determine whether processing is completed
+    Acknowledge = 0x05,
+    /// Server is engaged in processing a long-duration command; client should retry later
+    ServerDeviceBusy = 0x06,
+    /// Server cannot perform the programming functions; client should request diagnostic or error information from server
+    NegativeAcknowledge = 0x07,
+    /// Server detected a parity error in memory; client can retry the request
+    MemoryParityError = 0x08,
+    /// Specialized for Modbus gateways: indicates a misconfigured gateway
+    GatewayPathUnavailable = 0x10,
+    /// Specialized for Modbus gateways: sent when server fails to respond
+    GatewayTargetDeviceFailedToRespond = 0x11,
 }
 
-impl ModbusRequestData {
-    pub fn as_string(&self) -> String {
-        format!(
-            "id: {}\n{:?}\nStartReg: {}\nQuanity: {} \n---------",
-            match self.slave_id {
-                Some(v) => v.to_string(),
-                None => "-".to_string(),
-            },
-            self.function,
-            match self.start_addr {
-                Some(v) => v.to_string(),
-                None => "-".to_string(),
-            },
-            match self.quantity {
-                Some(v) => v.to_string(),
-                None => "-".to_string(),
-            }
-        )
-    }
-
-    pub fn clear_data(&mut self) {
-        self.slave_id = None;
-        self.start_addr = None;
-        self.quantity = None;
-    }
-}
 #[derive(Debug, Default)]
-pub struct RegisterData {
-    pub register: u16,
-    pub data: u16,
+pub struct ApplicationProtocolHeader {
+    /// For synchronization between messages of server and client
+    pub transaction_identifier: [u8; 2],
+    /// 0 for Modbus/TCP
+    pub protocol_identifiter: [u8; 2],
+    /// Number of remaining bytes in this frame
+    pub length_field: [u8; 2],
+    /// Server address (255 if not used), treated like slave address in Modbus over Serial line
+    pub unit_identifier: u8,
+}
+
+#[derive(Debug, Default)]
+pub struct ModbusPDU {
+    pub function_code: FunctionCode,
+    pub data: Option<[u16; 2]>,
+}
+
+#[derive(Debug, Default)]
+pub struct Frame {
+    pub application_header: ApplicationProtocolHeader,
+    pub modbus_pdu: ModbusPDU,
+}
+
+impl Frame {
+    pub fn as_vec(&self) -> Vec<u8> {
+        let mut data = Vec::new();
+
+        data.extend_from_slice(&self.application_header.transaction_identifier);
+        data.extend_from_slice(&self.application_header.protocol_identifiter);
+        data.extend_from_slice(&self.application_header.length_field);
+        data.push(self.application_header.unit_identifier);
+        data.push(self.modbus_pdu.function_code.clone() as u8);
+
+        match &self.modbus_pdu.data {
+            Some(payload) => {
+                data.extend_from_slice(&payload[0].to_be_bytes());
+                data.extend_from_slice(&payload[1].to_be_bytes());
+            }
+            None => {
+                println!("Missing payload when converting data");
+                ()
+            }
+        }
+        data
+    }
 }
