@@ -17,7 +17,7 @@ fn main() {
             let mut data = fetch_data(
                 1,
                 0x0001,
-                0x0008,
+                0x0052,
                 modbus::types::FunctionCode::ReadMultipleHoldingRegisters,
                 stream,
             );

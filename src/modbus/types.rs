@@ -1,3 +1,5 @@
+use std::io::prelude::*;
+
 #[derive(Debug, Clone, Default)]
 pub enum FunctionCode {
     #[default]
@@ -59,7 +61,7 @@ pub struct ApplicationProtocolHeader {
 #[derive(Debug, Default)]
 pub struct ModbusPDU {
     pub function_code: FunctionCode,
-    pub data: Option<[u16; 2]>,
+    pub data: [u16; 2],
 }
 
 #[derive(Debug, Default)]
@@ -71,23 +73,34 @@ pub struct Frame {
 impl Frame {
     pub fn as_vec(&self) -> Vec<u8> {
         let mut data = Vec::new();
+        let size = &self.convert_length_field().to_be_bytes();
+        let register = &self.modbus_pdu.data[0].to_be_bytes();
+        let quantity = &self.modbus_pdu.data[1].to_be_bytes();
 
         data.extend_from_slice(&self.application_header.transaction_identifier);
         data.extend_from_slice(&self.application_header.protocol_identifiter);
-        data.extend_from_slice(&self.application_header.length_field);
+        data.extend_from_slice(size);
         data.push(self.application_header.unit_identifier);
         data.push(self.modbus_pdu.function_code.clone() as u8);
 
-        match &self.modbus_pdu.data {
-            Some(payload) => {
-                data.extend_from_slice(&payload[0].to_be_bytes());
-                data.extend_from_slice(&payload[1].to_be_bytes());
-            }
-            None => {
-                println!("Missing payload when converting data");
-                ()
-            }
-        }
+        data.extend_from_slice(register);
+        data.extend_from_slice(quantity);
+
         data
+    }
+    fn convert_length_field(&self) -> u16 {
+        let register = self.modbus_pdu.data[0].to_be_bytes();
+        let quantity = self.modbus_pdu.data[1].to_be_bytes();
+        let code = self.modbus_pdu.function_code.clone() as u8;
+        let field = [
+            self.application_header.unit_identifier,
+            code,
+            register[0],
+            register[1],
+            quantity[0],
+            quantity[1],
+        ];
+
+        field.len() as u16
     }
 }

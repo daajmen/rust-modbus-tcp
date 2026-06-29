@@ -22,26 +22,24 @@ pub fn fetch_data(
     let mut result: Vec<u8> = Vec::new();
     let mut response = [255u8; 254];
 
+    // Modbus request frame
+    let mut modbus_data: ModbusPDU = ModbusPDU {
+        function_code: fn_code,
+        data: [start_reg, quanitiy], // start reg, quantity
+    };
+
     // Creating frame
     let mut header: ApplicationProtocolHeader = ApplicationProtocolHeader {
         transaction_identifier: [0x12, 0x34],
         protocol_identifiter: [0x00, 0x00],
-        length_field: [0x00, 0x06],
+        length_field: [0x00, 0x00],
         unit_identifier: unit_id,
-    };
-
-    // Modbus request frame
-    let mut modbus_data: ModbusPDU = ModbusPDU {
-        function_code: fn_code,
-        data: Some([start_reg, quanitiy]), // start reg, quantity
     };
 
     let mut modbus_frame: Frame = Frame {
         application_header: header,
         modbus_pdu: modbus_data,
     };
-
-    //header.length_field = modbus_data.data;
 
     match stream.write_all(&modbus_frame.as_vec()) {
         Ok(()) => match stream.read(&mut response) {
