@@ -23,6 +23,7 @@ pub struct PrimaryTables {
     pub holding_register: Option<u16>,
 }
 
+#[derive(Debug)]
 pub enum ModbusExceptionCode {
     /// Function code received in the query is not recognized or allowed by server
     IllegalFunction = 0x01,
