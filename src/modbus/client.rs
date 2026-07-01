@@ -1,5 +1,7 @@
 use super::types::Frame;
-use crate::modbus::types::{ApplicationProtocolHeader, FunctionCode, ModbusPDU};
+use crate::modbus::types::{
+    ApplicationProtocolHeader, ExceptionCode, FunctionCode, ModbusPDU, ResponseData,
+};
 use std::io::{Read, Result, Write};
 use std::net::TcpStream;
 
@@ -52,4 +54,42 @@ pub fn fetch_data(
         },
         Err(e) => Err(e),
     }
+}
+
+pub fn parse_data(mut data: Vec<u8>) -> ResponseData {
+    data.reverse();
+
+    let mut response_data: ResponseData = ResponseData {
+        function_code: None,
+        exception: None,
+        modbus_data: None,
+    };
+
+    let tran = [data.pop(), data.pop()];
+    let ident = [data.pop(), data.pop()];
+    let length = [data.pop(), data.pop()];
+    let unit = data.pop();
+    let function_byte = data.pop();
+    let mut exception: ExceptionCode = ExceptionCode {
+        exception_code: None,
+        exception_message: None,
+    };
+    let mut byte_count_data: Option<u8> = Some(0);
+
+    if function_byte.is_some() {
+        if exception.is_exception(function_byte.unwrap()) {
+            exception.get_exception_message(data.pop().unwrap());
+            response_data.exception = Some(exception);
+        } else {
+            byte_count_data = data.pop();
+        }
+    }
+    match function_byte {
+        Some(d) => response_data.function_code = FunctionCode::get_function_code(d),
+        None => (),
+    }
+
+    data.reverse();
+    response_data.modbus_data = Some(data);
+    response_data
 }

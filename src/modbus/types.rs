@@ -16,6 +16,25 @@ pub enum FunctionCode {
     ReadFIFOQueue = 0x24,
 }
 
+impl FunctionCode {
+    pub fn get_function_code(code: u8) -> Option<FunctionCode> {
+        match code {
+            0x01 => Some(FunctionCode::ReadCoil),
+            0x02 => Some(FunctionCode::ReadDiscreteInputs),
+            0x03 => Some(FunctionCode::ReadMultipleHoldingRegisters),
+            0x04 => Some(FunctionCode::ReadInputRegisters),
+            0x05 => Some(FunctionCode::WriteSingleCoil),
+            0x06 => Some(FunctionCode::WriteSingleHoldingRegister),
+            0x15 => Some(FunctionCode::WriteMultipleCoils),
+            0x16 => Some(FunctionCode::WriteMultipleHolding),
+            0x22 => Some(FunctionCode::MaskWriteRegister),
+            0x23 => Some(FunctionCode::ReadWriteHoldRegisters),
+            0x24 => Some(FunctionCode::ReadFIFOQueue),
+            _ => None,
+        }
+    }
+}
+
 pub struct PrimaryTables {
     pub discrete_input: Option<bool>,
     pub coil: Option<bool>,
@@ -53,6 +72,10 @@ pub struct ExceptionCode {
 }
 
 impl ExceptionCode {
+    pub fn is_exception(&self, code: u8) -> bool {
+        if code >= 0x80 { true } else { false }
+    }
+
     pub fn get_exception_message(&mut self, code: u8) {
         match code {
             0x01 => {
@@ -181,4 +204,10 @@ impl Frame {
 
         field.len() as u16
     }
+}
+#[derive(Debug)]
+pub struct ResponseData {
+    pub function_code: Option<FunctionCode>,
+    pub exception: Option<ExceptionCode>,
+    pub modbus_data: Option<Vec<u8>>,
 }
