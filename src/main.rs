@@ -4,7 +4,9 @@ use std::io::{Read, Write};
 
 use modbus::client::{connect, fetch_data};
 
-use crate::modbus::types::{ApplicationProtocolHeader, ModbusExceptionCode, ModbusPDU};
+use crate::modbus::types::{
+    ApplicationProtocolHeader, ExceptionCode, ExceptionCodeTypes, ModbusPDU,
+};
 
 fn main() {
     // Connection
@@ -32,6 +34,10 @@ fn main() {
                     let length = [r.pop(), r.pop()];
                     let unit = r.pop();
                     let function_byte = r.pop();
+                    let mut exception: ExceptionCode = ExceptionCode {
+                        exception_code: None,
+                        exception_message: None,
+                    };
 
                     println!("Transaction ID -> {:x?} \n", tran);
                     println!("Protocol identifier -> {:x?}\n", ident);
@@ -41,77 +47,16 @@ fn main() {
                     match function_byte {
                         Some(value) => {
                             if value >= 0x80 {
-                                println!("EXECPTION!! -> {:x?}\n", value);
-                                let exeception = r.pop();
+                                println!("EXCEPTION!! -> {:x?}\n", value);
+                                let exception_value = r.pop().unwrap();
 
-                                match exeception {
-                                    Some(ex) => {
-                                        match ex {
-                                            0x01 => {
-                                                println!(
-                                                    "{:?}, -> {:?}",
-                                                    ex,
-                                                    ModbusExceptionCode::IllegalFunction
-                                                )
-                                            }
-                                            0x02 => println!(
-                                                "{:?}, -> {:?}",
-                                                ex,
-                                                ModbusExceptionCode::IllegalDataAdress
-                                            ),
-                                            0x03 => {
-                                                println!(
-                                                    "{:?}, -> {:?}",
-                                                    ex,
-                                                    ModbusExceptionCode::IllegalDataValue
-                                                )
-                                            }
-                                            0x04 => println!(
-                                                "{:?}, -> {:?}",
-                                                ex,
-                                                ModbusExceptionCode::ServerDeviceFailure
-                                            ),
-                                            0x05 => {
-                                                println!(
-                                                    "{:?}, -> {:?}",
-                                                    ex,
-                                                    ModbusExceptionCode::Acknowledge
-                                                )
-                                            }
-                                            0x06 => {
-                                                println!(
-                                                    "{:?}, -> {:?}",
-                                                    ex,
-                                                    ModbusExceptionCode::ServerDeviceBusy
-                                                )
-                                            }
-                                            0x07 => println!(
-                                                "{:?}, -> {:?}",
-                                                ex,
-                                                ModbusExceptionCode::NegativeAcknowledge
-                                            ),
-                                            0x08 => println!(
-                                                "{:?}, -> {:?}",
-                                                ex,
-                                                ModbusExceptionCode::MemoryParityError
-                                            ),
-                                            0x10 => {
-                                                println!(
-                                                    "{:?}, -> {:?}",
-                                                    ex,
-                                                    ModbusExceptionCode::GatewayPathUnavailable
-                                                )
-                                            }
-                                            0x11 => println!(
-                                            "{:?}, -> {:?}",
-                                            ex,
-                                            ModbusExceptionCode::GatewayTargetDeviceFailedToRespond
-                                        ),
-                                            _ => (),
-                                        };
-                                    }
-                                    None => (),
-                                }
+                                exception.get_exception_message(exception_value);
+
+                                println!(
+                                    "Exception code -> {:?}",
+                                    exception.exception_code.unwrap()
+                                );
+                                println!("Message -> {:?}", exception.exception_message.unwrap());
                             } else {
                                 println!("FunctionByte byte -> {:?}", value);
                                 let byte_count_data = r.pop();

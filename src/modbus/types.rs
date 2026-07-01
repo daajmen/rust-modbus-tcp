@@ -24,7 +24,7 @@ pub struct PrimaryTables {
 }
 
 #[derive(Debug)]
-pub enum ModbusExceptionCode {
+pub enum ExceptionCodeTypes {
     /// Function code received in the query is not recognized or allowed by server
     IllegalFunction = 0x01,
     /// Data address of some or all the required entities are not allowed or do not exist in server
@@ -45,6 +45,83 @@ pub enum ModbusExceptionCode {
     GatewayPathUnavailable = 0x10,
     /// Specialized for Modbus gateways: sent when server fails to respond
     GatewayTargetDeviceFailedToRespond = 0x11,
+}
+#[derive(Debug, Default)]
+pub struct ExceptionCode {
+    pub exception_code: Option<ExceptionCodeTypes>,
+    pub exception_message: Option<String>,
+}
+
+impl ExceptionCode {
+    pub fn get_exception_message(&mut self, code: u8) {
+        match code {
+            0x01 => {
+                self.exception_code = Some(ExceptionCodeTypes::IllegalFunction);
+                self.exception_message = Some(
+                    "Function code received in the query is not recognized or allowed by server"
+                        .to_string(),
+                );
+            }
+            0x02 => {
+                self.exception_code = Some(ExceptionCodeTypes::IllegalDataAdress);
+                self.exception_message = Some(
+                    "Data address of some or all the required entities are not allowed or do not exist in server"
+                        .to_string(),
+                );
+            }
+            0x03 => {
+                self.exception_code = Some(ExceptionCodeTypes::IllegalDataValue);
+                self.exception_message = Some("Value is not accepted by server".to_string());
+            }
+            0x04 => {
+                self.exception_code = Some(ExceptionCodeTypes::ServerDeviceFailure);
+                self.exception_message = Some(
+                                "Unrecoverable error occurred while server was attempting to perform requested action"
+                                    .to_string(),
+                            );
+            }
+            0x05 => {
+                self.exception_code = Some(ExceptionCodeTypes::Acknowledge);
+                self.exception_message = Some(
+                    "Server has accepted request and is processing it, but a long duration of time is required. This response is returned to prevent a timeout error from occurring in the client. client can next issue a Poll Program Complete message to determine whether processing is completed"
+                                    .to_string(),
+                            );
+            }
+            0x06 => {
+                self.exception_code = Some(ExceptionCodeTypes::ServerDeviceBusy);
+                self.exception_message = Some(
+                                "Server is engaged in processing a long-duration command; client should retry later"
+                                    .to_string(),
+                            );
+            }
+            0x07 => {
+                self.exception_code = Some(ExceptionCodeTypes::NegativeAcknowledge);
+                self.exception_message = Some("Server cannot perform the programming functions; client should request diagnostic or error information from server".to_string());
+            }
+            0x08 => {
+                self.exception_code = Some(ExceptionCodeTypes::MemoryParityError);
+                self.exception_message = Some(
+                    "Server detected a parity error in memory; client can retry the request"
+                        .to_string(),
+                );
+            }
+            0x10 => {
+                self.exception_code = Some(ExceptionCodeTypes::GatewayPathUnavailable);
+                self.exception_message = Some(
+                    "Specialized for Modbus gateways: indicates a misconfigured gateway"
+                        .to_string(),
+                );
+            }
+            0x11 => {
+                self.exception_code = Some(ExceptionCodeTypes::GatewayTargetDeviceFailedToRespond);
+                self.exception_message = Some(
+                    "Specialized for Modbus gateways: sent when server fails to respond"
+                        .to_string(),
+                );
+            }
+            _ => (),
+        }
+    }
 }
 
 #[derive(Debug, Default)]
