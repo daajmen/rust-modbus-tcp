@@ -5,6 +5,8 @@ use std::io::{Read, Write};
 use modbus::client::{connect, fetch_data};
 
 use crate::modbus::{
+    client::convert_to_i16,
+    client::convert_to_u16,
     client::parse_data,
     types::{ApplicationProtocolHeader, ExceptionCode, ExceptionCodeTypes, ModbusPDU},
 };
@@ -38,7 +40,11 @@ fn main() {
                         None => println!("Exception: None"),
                     }
 
-                    println!("Modbus data: {:?}", response.modbus_data.unwrap());
+                    //println!("Modbus data: {:?}", response.modbus_data.unwrap());
+                    println!(
+                        "Converted data: {:?}",
+                        convert_to_i16(response.modbus_data.unwrap())
+                    );
                 }
                 Err(e) => (),
             }

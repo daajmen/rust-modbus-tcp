@@ -93,3 +93,27 @@ pub fn parse_data(mut data: Vec<u8>) -> ResponseData {
     response_data.modbus_data = Some(data);
     response_data
 }
+
+pub fn convert_to_u16(data: Vec<u8>) -> Vec<u16> {
+    let mut converted_data: Vec<u16> = Vec::new();
+
+    for i in (0..data.len() - 1).step_by(2) {
+        println!("{:?},{:?}", data[i], data[i + 1]);
+        let var = u16::from_be_bytes([data[i], data[i + 1]]);
+        converted_data.push(var);
+    }
+
+    converted_data
+}
+
+pub fn convert_to_i16(data: Vec<u8>) -> Vec<i16> {
+    let mut converted_data: Vec<i16> = Vec::new();
+
+    for i in (0..data.len() - 1).step_by(2) {
+        println!("{:?},{:?}", data[i], data[i + 1]);
+        let var = i16::from_be_bytes([data[i], data[i + 1]]);
+        converted_data.push(var);
+    }
+
+    converted_data
+}
